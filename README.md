@@ -1,2 +1,4 @@
 # C4D
-input Miratope-generated 4d shape obj data
+Generate 4D obj. data with Miratope first
+Then input 
+ 
