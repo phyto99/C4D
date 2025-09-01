@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4D Polytope Viewer</title>
+    <style>
+        body{margin:0;padding:0;background:#111;color:white;font-family:Arial,sans-serif;overflow:hidden}
+        #container{position:relative;width:100vw;height:100vh}
+        
+        /* Top slider panel */
+        #slider-panel{position:absolute;top:10px;left:10px;right:10px;height:50px;background:rgba(0,0,0,0.8);border-radius:8px;z-index:100;display:flex;align-items:center;padding:0 20px;gap:15px}
+        #w-slider{flex:1;height:30px;background:#333;border-radius:4px;cursor:pointer}
+        #w-slider::-webkit-slider-track{background:#333;height:30px;border-radius:4px}
+        #w-slider::-moz-range-track{background:#333;height:30px;border-radius:4px}
+        #slider-value{min-width:80px;text-align:center;font-family:monospace}
+        
+        /* Input panel */
+        #input-panel{position:absolute;top:80px;left:10px;width:300px;max-height:250px;background:rgba(0,0,0,0.8);padding:15px;border-radius:8px;z-index:100;display:flex;flex-direction:column;gap:10px}
+        #text-input{width:100%;height:150px;background:#333;border:1px solid #555;color:white;padding:8px;font-family:monospace;resize:vertical}
+        #load-button,#sample-button{padding:8px 16px;border:none;color:white;cursor:pointer;border-radius:4px;font-size:12px}
+        #load-button{background:#4CAF50}#load-button:hover{background:#45a049}
+        #sample-button{background:#2196F3}#sample-button:hover{background:#1976D2}
+        
+        /* Stats panel with integrated scoreboard */
+        #stats-panel{position:absolute;top:80px;right:10px;background:rgba(0,0,0,0.8);padding:10px;border-radius:4px;font-family:monospace;z-index:100;min-width:180px;font-size:11px}
+        .team-row{display:flex;justify-content:space-between;margin:2px 0}
+        .cyan{color:#00FFFF}
+        .magenta{color:#FF00FF}
+        .lime{color:#00FF00}
+        
+        #instructions{position:absolute;bottom:10px;left:10px;background:rgba(0,0,0,0.8);padding:10px;border-radius:4px;font-size:12px;z-index:100;max-width:300px}
+    </style>
+</head>
+<body>
+    <div id="container">
+        <!-- Top slider panel -->
+        <div id="slider-panel">
+            <span style="font-size:12px;min-width:20px">W:</span>
+            <input type="range" id="w-slider" min="-1" max="1" step="0.01" value="0">
+            <span id="slider-value">0.00</span>
+        </div>
+        
+        <!-- Input panel -->
+        <div id="input-panel">
+            <textarea id="text-input" placeholder="Paste OFF format data here..."></textarea>
+            <div style="display:flex;gap:10px">
+                <button id="load-button">Load OFF</button>
+                <button id="sample-button">Sample Tesseract</button>
+            </div>
+        </div>
+        
+        <!-- Stats panel with scoreboard -->
+        <div id="stats-panel">
+            <div id="object-stats">Vertices: 0 | Edges: 0 | Faces: 0 | Cells: 0</div>
+            <div id="cross-stats">Cross: V:0 E:0 F:0</div>
+            <div style="margin:5px 0;border-bottom:1px solid #444"></div>
+            <div class="team-row">
+                <span class="cyan">Cyan:</span>
+                <span id="cyan-score">V:0 E:0 F:0 C:0</span>
+            </div>
+            <div class="team-row">
+                <span class="magenta">Magenta:</span>
+                <span id="magenta-score">V:0 E:0 F:0 C:0</span>
+            </div>
+            <div class="team-row">
+                <span class="lime">Lime:</span>
+                <span id="lime-score">V:0 E:0 F:0 C:0</span>
+            </div>
+        </div>
+        
+        <div id="instructions">Left-click: Color cross-section vertices<br>Right-click + drag: Rotate camera<br>Mouse wheel: Zoom<br>W-slider: 4D cross-section plane<br><br><strong>White/bright:</strong> Current cross-section<br><strong>Dark/faded:</strong> Full 4D object reference</div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        class FourDViewer {
+            constructor() {
+                this.verts = [];
+                this.edges = [];
+                this.faces = [];
+                this.cells = [];
+                this.colors = new Map();
+                this.palette = [0x00FFFF, 0xFF00FF, 0x00FF00];
+                this.teamNames = ['cyan', 'magenta', 'lime'];
+                this.teamScores = {cyan: {v:0,e:0,f:0,c:0}, magenta: {v:0,e:0,f:0,c:0}, lime: {v:0,e:0,f:0,c:0}};
+                this.colorIdx = 0;
+                this.w = 0;
+                this.wMin = -1;
+                this.wMax = 1;
+                this.wVelocity = 0;
+                this.isDragging = false;
+                this.lastMouseTime = 0;
+                this.lastWValue = 0;
+                this.rotating = false;
+                this.mouse = {x:0,y:0};
+                this.camRot = {x:0,y:0};
+                this.camDist = 5;
+                
+                // Pre-computed intersection data
+                this.edgeIntersections = []; // {edge:[i1,i2], v1, v2}
+                this.facePolygons = []; // {face:[], intersections:[]}
+                
+                // Persistent geometries
+                this.crossVertGeom = null;
+                this.crossEdgeGeoms = [];
+                this.crossFaceGeoms = [];
+                this.refVertGeom = null;
+                this.refEdgeGeoms = [];
+                
+                this.init();
+                this.setupEvents();
+                this.loadSample();
+            }
+
+            init() {
+                this.scene = new THREE.Scene();
+                this.scene.background = new THREE.Color(0x222222);
+                this.camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 1000);
+                this.updateCam();
+                this.renderer = new THREE.WebGLRenderer({antialias:true});
+                this.renderer.setSize(innerWidth, innerHeight);
+                document.getElementById('container').appendChild(this.renderer.domElement);
+                
+                this.scene.add(new THREE.AmbientLight(0x404040, 0.6));
+                const light = new THREE.DirectionalLight(0xffffff, 0.8);
+                light.position.set(0,10,0);
+                this.scene.add(light);
+
+                this.vGroup = new THREE.Group();
+                this.eGroup = new THREE.Group();
+                this.fGroup = new THREE.Group();
+                this.scene.add(this.vGroup, this.eGroup, this.fGroup);
+
+                this.raycaster = new THREE.Raycaster();
+                this.raycaster.params.Points.threshold = 0.1;
+                this.animate();
+            }
+
+            setupEvents() {
+                const slider = document.getElementById('w-slider');
+                const val = document.getElementById('slider-value');
+                
+                // Enhanced momentum implementation with click detection
+                let isActualDrag = false;
+                let startMousePos = 0;
+                const dragThreshold = 3; // pixels
+                
+                slider.onmousedown = slider.ontouchstart = e => {
+                    this.isDragging = true;
+                    isActualDrag = false;
+                    this.wVelocity = 0;
+                    this.lastMouseTime = Date.now();
+                    this.lastWValue = this.w;
+                    startMousePos = e.clientX || (e.touches && e.touches[0].clientX) || 0;
+                };
+
+                slider.onmousemove = slider.ontouchmove = e => {
+                    if(this.isDragging) {
+                        const currentMousePos = e.clientX || (e.touches && e.touches[0].clientX) || 0;
+                        if(Math.abs(currentMousePos - startMousePos) > dragThreshold) {
+                            isActualDrag = true;
+                        }
+                    }
+                };
+
+                slider.onmouseup = slider.ontouchend = e => {
+                    this.isDragging = false;
+                    if(isActualDrag) {
+                        this.startMomentumAnimation();
+                    } else {
+                        // Direct click - no momentum, but update stats
+                        this.updateStats();
+                        this.updateScoreboard();
+                    }
+                };
+
+                slider.oninput = e => {
+                    const newW = +e.target.value;
+                    const currentTime = Date.now();
+                    
+                    if(this.isDragging && isActualDrag) {
+                        // Calculate velocity for momentum only during actual dragging
+                        const deltaW = newW - this.lastWValue;
+                        const deltaTime = Math.max(1, currentTime - this.lastMouseTime);
+                        this.wVelocity = deltaW / deltaTime * 1000; // pixels per second
+                        
+                        this.lastWValue = newW;
+                        this.lastMouseTime = currentTime;
+                    } else if(!this.isDragging || !isActualDrag) {
+                        // Direct click or programmatic change - no velocity calculation
+                        this.wVelocity = 0;
+                    }
+                    
+                    this.w = newW;
+                    val.textContent = this.w.toFixed(2);
+                    this.updateSliderMarkers();
+                    this.updatePositions();
+                    this.updateStats();
+                    this.checkCriticalPoints();
+                };
+
+                document.getElementById('load-button').onclick = () => {
+                    this.parseOFF(document.getElementById('text-input').value);
+                    this.rebuild();
+                };
+
+                document.getElementById('sample-button').onclick = () => this.loadSample();
+
+                const canvas = this.renderer.domElement;
+                canvas.onmousedown = e => {
+                    if(e.button === 2) {
+                        this.rotating = true;
+                        this.mouse = {x:e.clientX, y:e.clientY};
+                    }
+                };
+                canvas.onmousemove = e => {
+                    if(this.rotating) {
+                        const dx = e.clientX - this.mouse.x;
+                        const dy = e.clientY - this.mouse.y;
+                        this.camRot.x -= dx * 0.2;
+                        this.camRot.y = Math.max(-80, Math.min(80, this.camRot.y + dy * 0.2));
+                        this.mouse = {x:e.clientX, y:e.clientY};
+                        this.updateCam();
+                    }
+                };
+                canvas.onmouseup = e => e.button === 2 && (this.rotating = false);
+                canvas.onwheel = e => {
+                    e.preventDefault();
+                    this.camDist = Math.max(2, Math.min(20, this.camDist + e.deltaY * 0.01));
+                    this.updateCam();
+                };
+                canvas.onclick = e => {
+                    if(e.button === 0 && !this.rotating && this.crossVertGeom) {
+                        const m = new THREE.Vector2((e.clientX/innerWidth)*2-1, -(e.clientY/innerHeight)*2+1);
+                        this.raycaster.setFromCamera(m, this.camera);
+                        const crossPoints = this.vGroup.children.find(child => child.geometry === this.crossVertGeom);
+                        if(crossPoints) {
+                            const hits = this.raycaster.intersectObject(crossPoints);
+                            if(hits.length) {
+                                const hitIdx = hits[0].index;
+                                const activeInters = this.getActiveIntersections();
+                                if(hitIdx < activeInters.length) {
+                                    const inter = activeInters[hitIdx];
+                                    const team = this.teamNames[this.colorIdx];
+                                    const color = this.palette[this.colorIdx];
+                                    
+                                    this.colors.set(inter.edge[0], color);
+                                    this.colors.set(inter.edge[1], color);
+                                    this.colorIdx = (this.colorIdx + 1) % this.palette.length;
+                                    this.updateScoreboard();
+                                    this.updatePositions();
+                                }
+                            }
+                        }
+                    }
+                };
+                onresize = () => {
+                    this.camera.aspect = innerWidth/innerHeight;
+                    this.camera.updateProjectionMatrix();
+                    this.renderer.setSize(innerWidth, innerHeight);
+                };
+                oncontextmenu = e => e.preventDefault();
+            }
+
+            checkCriticalPoints() {
+                // Check if we're at a critical W value and update scoreboard accordingly
+                const tolerance = 0.02;
+                const nearCritical = this.criticalW && this.criticalW.find(cw => Math.abs(this.w - cw) < tolerance);
+                
+                if(nearCritical) {
+                    const verticesAtW = this.verts.filter(v => Math.abs(v.w - nearCritical) < 0.001).length;
+                    if(verticesAtW > 1) {
+                        // Update scoreboard with bonus points for hitting critical vertices
+                        this.updateScoreboard(true);
+                    }
+                }
+            }
+
+            loadSample() {
+                const data = `16 32 24\n-1 -1 -1 -1\n1 -1 -1 -1\n-1 1 -1 -1\n1 1 -1 -1\n-1 -1 1 -1\n1 -1 1 -1\n-1 1 1 -1\n1 1 1 -1\n-1 -1 -1 1\n1 -1 -1 1\n-1 1 -1 1\n1 1 -1 1\n-1 -1 1 1\n1 -1 1 1\n-1 1 1 1\n1 1 1 1\n4 0 1 3 2\n4 4 6 7 5\n4 0 4 5 1\n4 2 3 7 6\n4 0 2 6 4\n4 1 5 7 3\n4 8 9 11 10\n4 12 14 15 13\n4 8 12 13 9\n4 10 11 15 14\n4 8 10 14 12\n4 9 13 15 11\n4 0 8 9 1\n4 2 10 11 3\n4 4 12 13 5\n4 6 14 15 7\n4 0 8 10 2\n4 1 9 11 3\n4 4 12 14 6\n4 5 13 15 7\n4 0 8 12 4\n4 1 9 13 5\n4 2 10 14 6\n4 3 11 15 7\n4 0 1 2 3\n4 4 5 6 7\n4 8 9 10 11\n4 12 13 14 15\n4 0 4 8 12\n4 1 5 9 13\n4 2 6 10 14\n4 3 7 11 15`;
+                document.getElementById('text-input').value = data;
+                this.parseOFF(data);
+                this.rebuild();
+            }
+
+            parseOFF(content) {
+                this.verts = [];
+                this.edges = [];
+                this.faces = [];
+                this.cells = [];
+                this.colors.clear();
+                this.updateScoreboard();
+
+                const lines = content.split('\n').filter(l => l.trim() && !l.startsWith('#'));
+                if(!lines.length) return;
+
+                let i = 0;
+                const [vCount, fCount, , cCount = 0] = lines[i++].split(/\s+/).map(Number);
+
+                // Parse vertices
+                let hasW = false;
+                for(let j = 0; j < vCount && i < lines.length; j++, i++) {
+                    const coords = lines[i].split(/\s+/).map(Number);
+                    if(coords.length >= 3) {
+                        let w = coords[3] ?? (j/(vCount-1)*2-1);
+                        if(coords[3] !== undefined) hasW = true;
+                        this.verts.push({x:coords[0], y:coords[1], z:coords[2], w});
+                    }
+                }
+
+                if(!hasW) {
+                    this.verts.forEach((v,idx) => v.w = (idx/(this.verts.length-1))*2-1);
+                }
+
+                // Parse faces
+                for(let j = 0; j < fCount && i < lines.length; j++, i++) {
+                    const data = lines[i].split(/\s+/).map(Number);
+                    const n = data[0];
+                    const indices = data.slice(1, 1+n);
+                    if(indices.length === n && indices.every(idx => idx >= 0 && idx < this.verts.length)) {
+                        this.faces.push(indices);
+                    }
+                }
+
+                // Parse cells
+                for(let j = 0; j < cCount && i < lines.length; j++, i++) {
+                    const data = lines[i].split(/\s+/).map(Number);
+                    const n = data[0];
+                    const indices = data.slice(1, 1+n);
+                    if(indices.length === n && indices.every(idx => idx >= 0 && idx < this.faces.length)) {
+                        this.cells.push(indices);
+                    }
+                }
+
+                this.generateEdges();
+                this.calculateWBounds();
+                this.updateSliderRange();
+                this.precomputeIntersections();
+            }
+
+            calculateWBounds() {
+                if(!this.verts.length) return;
+                
+                const wValues = this.verts.map(v => v.w);
+                this.wMin = Math.min(...wValues);
+                this.wMax = Math.max(...wValues);
+                
+                // Find critical W values where vertices align (potential shape changes)
+                this.criticalW = new Set();
+                this.verts.forEach(v => this.criticalW.add(v.w));
+                this.criticalW = Array.from(this.criticalW).sort((a,b) => a-b);
+                
+                // Ensure we start in a reasonable position
+                this.w = Math.max(this.wMin, Math.min(this.wMax, this.w));
+            }
+
+            updateSliderRange() {
+                const slider = document.getElementById('w-slider');
+                const val = document.getElementById('slider-value');
+                
+                // Use higher precision for slider bounds to fix the 1.61 vs 1.62 issue
+                slider.min = this.wMin.toFixed(6);
+                slider.max = this.wMax.toFixed(6);
+                slider.value = this.w.toFixed(6);
+                slider.step = "0.001"; // Smaller step for better precision
+                val.textContent = this.w.toFixed(2);
+                
+                this.createSliderMarkers();
+            }
+
+            createSliderMarkers() {
+                // Create visual markers on slider track for critical W values
+                const sliderPanel = document.getElementById('slider-panel');
+                
+                // Remove existing markers
+                const existingMarkers = sliderPanel.querySelectorAll('.w-marker');
+                existingMarkers.forEach(marker => marker.remove());
+                
+                // Add markers for each critical W value
+                if(this.criticalW) {
+                    this.criticalW.forEach(cw => {
+                        if(cw > this.wMin && cw < this.wMax) {
+                            const marker = document.createElement('div');
+                            marker.className = 'w-marker';
+                            const sliderRect = document.getElementById('w-slider').getBoundingClientRect();
+                            const panelRect = sliderPanel.getBoundingClientRect();
+                            const sliderLeft = sliderRect.left - panelRect.left;
+                            const sliderWidth = sliderRect.width;
+                            
+                            marker.style.cssText = `
+                                position: absolute;
+                                width: 2px;
+                                height: 30px;
+                                background: #FF6B35;
+                                top: 10px;
+                                left: ${sliderLeft + ((cw - this.wMin) / (this.wMax - this.wMin)) * sliderWidth}px;
+                                pointer-events: none;
+                                z-index: 1;
+                                opacity: 0.7;
+                            `;
+                            
+                            // Add vertex count tooltip
+                            const vertexCount = this.verts.filter(v => Math.abs(v.w - cw) < 0.001).length;
+                            if(vertexCount > 1) {
+                                marker.title = `${vertexCount} vertices at W=${cw.toFixed(2)}`;
+                            }
+                            
+                            sliderPanel.appendChild(marker);
+                        }
+                    });
+                }
+            }
+
+            updateSliderMarkers() {
+                // Update slider appearance based on proximity to critical points
+                const val = document.getElementById('slider-value');
+                
+                // Check if we're near any critical W value
+                const tolerance = 0.02;
+                const nearCritical = this.criticalW && this.criticalW.find(cw => Math.abs(this.w - cw) < tolerance);
+                
+                if(nearCritical) {
+                    const verticesAtW = this.verts.filter(v => Math.abs(v.w - nearCritical) < 0.001).length;
+                    if(verticesAtW > 1) {
+                        val.style.color = '#FF6B35';
+                        val.style.fontWeight = 'bold';
+                        val.textContent = `${this.w.toFixed(2)} (${verticesAtW}v)`;
+                        return;
+                    }
+                }
+                
+                val.style.color = 'white';
+                val.style.fontWeight = 'normal';
+                val.textContent = this.w.toFixed(2);
+            }
+
+            startMomentumAnimation() {
+                if(Math.abs(this.wVelocity) < 0.001) return;
+                
+                const animate = () => {
+                    if(this.isDragging) return; // Stop if user grabs slider again
+                    
+                    // Apply momentum - with balanced speed limiting and reduced friction
+                    const deltaTime = 16; // ~60fps
+                    
+                    // Gentle speed limiting that doesn't break physics
+                    const maxSpeed = 2; // Slower max speed
+                    if(Math.abs(this.wVelocity) > maxSpeed) {
+                        this.wVelocity = Math.sign(this.wVelocity) * maxSpeed;
+                    }
+                    
+                    this.w += this.wVelocity * deltaTime / 1000;
+                    
+                    // Handle wrapping with momentum preservation
+                    if(this.w > this.wMax) {
+                        this.w = this.wMin + (this.w - this.wMax);
+                    } else if(this.w < this.wMin) {
+                        this.w = this.wMax - (this.wMin - this.w);
+                    }
+                    
+                    // Reduced friction for longer momentum (balances the slower max speed)
+                    this.wVelocity *= 0.99;
+                    
+                    // Update slider and display
+                    const slider = document.getElementById('w-slider');
+                    const val = document.getElementById('slider-value');
+                    slider.value = this.w.toFixed(6);
+                    val.textContent = this.w.toFixed(2);
+                    this.updateSliderMarkers();
+                    this.updatePositions();
+                    this.updateStats();
+                    this.checkCriticalPoints();
+                    
+                    // Continue animation if still moving
+                    if(Math.abs(this.wVelocity) > 0.001) {
+                        requestAnimationFrame(animate);
+                    }
+                };
+                
+                requestAnimationFrame(animate);
+            }
+
+            generateEdges() {
+                const edgeSet = new Set();
+                this.edges = [];
+                this.faces.forEach(face => {
+                    for(let i = 0; i < face.length; i++) {
+                        const [v1, v2] = [face[i], face[(i+1)%face.length]];
+                        const key = `${Math.min(v1,v2)}_${Math.max(v1,v2)}`;
+                        if(!edgeSet.has(key)) {
+                            edgeSet.add(key);
+                            this.edges.push([v1, v2]);
+                        }
+                    }
+                });
+            }
+
+            precomputeIntersections() {
+                this.edgeIntersections = [];
+                this.facePolygons = [];
+
+                // Pre-compute all possible edge intersections
+                this.edges.forEach(edge => {
+                    const [v1, v2] = [this.verts[edge[0]], this.verts[edge[1]]];
+                    // Store all edges that span any part of our W range
+                    if((v1.w <= this.wMax && v2.w >= this.wMin) || (v1.w >= this.wMin && v2.w <= this.wMax)) {
+                        this.edgeIntersections.push({
+                            edge: edge,
+                            v1: v1,
+                            v2: v2
+                        });
+                    }
+                });
+
+                // Pre-compute face intersection patterns
+                this.faces.forEach(face => {
+                    const faceEdges = [];
+                    for(let i = 0; i < face.length; i++) {
+                        const [v1, v2] = [face[i], face[(i+1)%face.length]];
+                        const edgeIdx = this.edgeIntersections.findIndex(e => 
+                            (e.edge[0] === v1 && e.edge[1] === v2) || 
+                            (e.edge[0] === v2 && e.edge[1] === v1)
+                        );
+                        if(edgeIdx !== -1) faceEdges.push(edgeIdx);
+                    }
+                    if(faceEdges.length > 0) {
+                        this.facePolygons.push({
+                            face: face,
+                            edgeIndices: faceEdges
+                        });
+                    }
+                });
+            }
+
+            project(v) {
+                const dw = v.w - this.w;
+                const denom = 2 - dw;
+                if(Math.abs(denom) < 0.001) return new THREE.Vector3(v.x*100, v.y*100, v.z*100);
+                const s = 2/denom;
+                return new THREE.Vector3(v.x*s, v.y*s, v.z*s);
+            }
+
+            crosses(v1, v2) {
+                return (v1.w <= this.w && v2.w >= this.w) || (v1.w >= this.w && v2.w <= this.w);
+            }
+
+            lerp(v1, v2) {
+                if(Math.abs(v2.w - v1.w) < 0.001) return v1;
+                const t = (this.w - v1.w)/(v2.w - v1.w);
+                return {
+                    x: v1.x + t*(v2.x - v1.x),
+                    y: v1.y + t*(v2.y - v1.y),
+                    z: v1.z + t*(v2.z - v1.z),
+                    w: this.w,
+                    t
+                };
+            }
+
+            getColor(inter) {
+                const [i1, i2] = inter.edge;
+                const c1 = new THREE.Color(this.colors.get(i1) || 0xFFFFFF);
+                const c2 = new THREE.Color(this.colors.get(i2) || 0xFFFFFF);
+                return new THREE.Color().lerpColors(c1, c2, inter.t || 0);
+            }
+
+            rebuild() {
+                this.vGroup.clear();
+                this.eGroup.clear();
+                this.fGroup.clear();
+                this.crossEdgeGeoms = [];
+                this.crossFaceGeoms = [];
+                this.refEdgeGeoms = [];
+
+                if(!this.verts.length) return;
+
+                this.createCrossGeometries();
+                this.createRefGeometries();
+                this.updatePositions();
+                this.updateStats();
+            }
+
+            
+            createCrossGeometries() {
+                // Create circular point texture
+                const canvas = document.createElement('canvas');
+                canvas.width = canvas.height = 32;
+                const ctx = canvas.getContext('2d');
+                const gradient = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
+                gradient.addColorStop(0, 'rgba(255,255,255,1)');
+                gradient.addColorStop(0.7, 'rgba(255,255,255,1)');
+                gradient.addColorStop(1, 'rgba(255,255,255,0)');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, 32, 32);
+                const circleTexture = new THREE.CanvasTexture(canvas);
+
+                // Cross-section vertex geometry - main colored points
+                this.crossVertGeom = new THREE.BufferGeometry();
+                const maxVerts = this.edgeIntersections.length;
+                this.crossVertGeom.setAttribute('position', new THREE.BufferAttribute(new Float32Array(maxVerts * 3), 3));
+                this.crossVertGeom.setAttribute('color', new THREE.BufferAttribute(new Float32Array(maxVerts * 3), 3));
+                this.crossVertGeom.setDrawRange(0, 0);
+                this.vGroup.add(new THREE.Points(this.crossVertGeom, new THREE.PointsMaterial({
+                    size: 16,
+                    vertexColors: true,
+                    sizeAttenuation: false,
+                    map: circleTexture,
+                    alphaTest: 0.1,
+                    transparent: true
+                })));
+
+                // Cross-section vertex outline geometry - white outlines
+                this.crossVertOutlineGeom = new THREE.BufferGeometry();
+                this.crossVertOutlineGeom.setAttribute('position', new THREE.BufferAttribute(new Float32Array(maxVerts * 3), 3));
+                this.crossVertOutlineGeom.setDrawRange(0, 0);
+                this.vGroup.add(new THREE.Points(this.crossVertOutlineGeom, new THREE.PointsMaterial({
+                    size: 22,
+                    color: 0xffffff,
+                    sizeAttenuation: false,
+                    transparent: true,
+                    opacity: 1.0,
+                    map: circleTexture,
+                    alphaTest: 0.1
+                })));
+                // Pre-create edge geometries
+                this.edgeIntersections.forEach(() => {
+                    const geom = new THREE.BufferGeometry();
+                    geom.setAttribute('position', new THREE.BufferAttribute(new Float32Array(6), 3));
+                    geom.setAttribute('color', new THREE.BufferAttribute(new Float32Array(6), 3));
+                    geom.setDrawRange(0, 0);
+                    this.crossEdgeGeoms.push(geom);
+                    this.eGroup.add(new THREE.Line(geom, new THREE.LineBasicMaterial({vertexColors:true, linewidth:2})));
+                });
+
+                // Pre-create face geometries  
+                this.facePolygons.forEach(fp => {
+                    const geom = new THREE.BufferGeometry();
+                    const maxFaceVerts = fp.edgeIndices.length;
+                    geom.setAttribute('position', new THREE.BufferAttribute(new Float32Array(maxFaceVerts * 3), 3));
+                    geom.setAttribute('color', new THREE.BufferAttribute(new Float32Array(maxFaceVerts * 3), 3));
+                    geom.setIndex(new THREE.BufferAttribute(new Uint32Array(maxFaceVerts), 1));
+                    geom.setDrawRange(0, 0);
+                    this.crossFaceGeoms.push(geom);
+                    this.fGroup.add(new THREE.Mesh(geom, new THREE.MeshBasicMaterial({vertexColors:true, side:THREE.DoubleSide, transparent:true, opacity:0.5})));
+                });
+            }
+
+            createRefGeometries() {
+                // Reference vertices
+                this.refVertGeom = new THREE.BufferGeometry();
+                const refPos = new Float32Array(this.verts.length * 3);
+                const refCol = new Float32Array(this.verts.length * 3);
+                this.refVertGeom.setAttribute('position', new THREE.BufferAttribute(refPos, 3));
+                this.refVertGeom.setAttribute('color', new THREE.BufferAttribute(refCol, 3));
+                this.vGroup.add(new THREE.Points(this.refVertGeom, new THREE.PointsMaterial({size:4, vertexColors:true, sizeAttenuation:false, transparent:true, opacity:0.4})));
+
+                // Reference edges
+                this.edges.forEach(() => {
+                    const geom = new THREE.BufferGeometry();
+                    geom.setAttribute('position', new THREE.BufferAttribute(new Float32Array(6), 3));
+                    geom.setAttribute('color', new THREE.BufferAttribute(new Float32Array(6), 3));
+                    this.refEdgeGeoms.push(geom);
+                    this.eGroup.add(new THREE.Line(geom, new THREE.LineBasicMaterial({vertexColors:true, transparent:true, opacity:0.3})));
+                });
+            }
+
+            getActiveIntersections() {
+                const activeInters = [];
+                this.edgeIntersections.forEach(inter => {
+                    if(this.crosses(inter.v1, inter.v2)) {
+                        const lerpVert = this.lerp(inter.v1, inter.v2);
+                        activeInters.push({...inter, ...lerpVert});
+                    }
+                });
+                return activeInters;
+            }
+
+            updatePositions() {
+                if(!this.crossVertGeom) return;
+
+                // Update cross-section
+                const activeInters = this.getActiveIntersections();
+
+                // Update vertex positions
+                const pos = this.crossVertGeom.attributes.position.array;
+                const col = this.crossVertGeom.attributes.color.array;
+                activeInters.forEach((inter, i) => {
+                    const p = this.project(inter);
+                    pos[i*3] = p.x; pos[i*3+1] = p.y; pos[i*3+2] = p.z;
+                    const c = this.getColor(inter);
+                    col[i*3] = c.r; col[i*3+1] = c.g; col[i*3+2] = c.b;
+                });
+                this.crossVertGeom.attributes.position.needsUpdate = true;
+                this.crossVertGeom.attributes.color.needsUpdate = true;
+                this.crossVertGeom.setDrawRange(0, activeInters.length);
+
+                // Update edge positions (simplified - just show edges between adjacent intersections)
+                let edgeCount = 0;
+                this.facePolygons.forEach(fp => {
+                    const faceInters = [];
+                    fp.edgeIndices.forEach(edgeIdx => {
+                        const inter = this.edgeIntersections[edgeIdx];
+                        if(this.crosses(inter.v1, inter.v2)) {
+                            const lerpVert = this.lerp(inter.v1, inter.v2);
+                            faceInters.push({...inter, ...lerpVert});
+                        }
+                    });
+                    
+                    if(faceInters.length >= 2) {
+                        for(let i = 0; i < faceInters.length && edgeCount < this.crossEdgeGeoms.length; i++) {
+                            const next = (i + 1) % faceInters.length;
+                            const geom = this.crossEdgeGeoms[edgeCount];
+                            const ePos = geom.attributes.position.array;
+                            const eCol = geom.attributes.color.array;
+                            
+                            const p1 = this.project(faceInters[i]);
+                            const p2 = this.project(faceInters[next]);
+                            ePos[0] = p1.x; ePos[1] = p1.y; ePos[2] = p1.z;
+                            ePos[3] = p2.x; ePos[4] = p2.y; ePos[5] = p2.z;
+                            
+                            const c1 = this.getColor(faceInters[i]);
+                            const c2 = this.getColor(faceInters[next]);
+                            eCol[0] = c1.r; eCol[1] = c1.g; eCol[2] = c1.b;
+                            eCol[3] = c2.r; eCol[4] = c2.g; eCol[5] = c2.b;
+                            
+                            geom.attributes.position.needsUpdate = true;
+                            geom.attributes.color.needsUpdate = true;
+                            geom.setDrawRange(0, 2);
+                            edgeCount++;
+                        }
+                    }
+                });
+
+                // Hide unused edge geometries
+                for(let i = edgeCount; i < this.crossEdgeGeoms.length; i++) {
+                    this.crossEdgeGeoms[i].setDrawRange(0, 0);
+                }
+
+                // Update reference geometry
+                this.updateRefPositions();
+            }
+
+            updateRefPositions() {
+                if(!this.refVertGeom) return;
+
+                const refPos = this.refVertGeom.attributes.position.array;
+                const refCol = this.refVertGeom.attributes.color.array;
+                this.verts.forEach((v, i) => {
+                    const p = this.project(v);
+                    refPos[i*3] = p.x; refPos[i*3+1] = p.y; refPos[i*3+2] = p.z;
+                    const c = this.colors.get(i) ? new THREE.Color(this.colors.get(i)) : new THREE.Color(0.3, 0.3, 0.4);
+                    refCol[i*3] = c.r; refCol[i*3+1] = c.g; refCol[i*3+2] = c.b;
+                });
+                this.refVertGeom.attributes.position.needsUpdate = true;
+                this.refVertGeom.attributes.color.needsUpdate = true;
+
+                this.edges.forEach(([i1, i2], i) => {
+                    const geom = this.refEdgeGeoms[i];
+                    const ePos = geom.attributes.position.array;
+                    const eCol = geom.attributes.color.array;
+                    
+                    const p1 = this.project(this.verts[i1]);
+                    const p2 = this.project(this.verts[i2]);
+                    ePos[0] = p1.x; ePos[1] = p1.y; ePos[2] = p1.z;
+                    ePos[3] = p2.x; ePos[4] = p2.y; ePos[5] = p2.z;
+                    
+                    const c1 = this.colors.get(i1) ? new THREE.Color(this.colors.get(i1)) : new THREE.Color(0.2, 0.2, 0.3);
+                    const c2 = this.colors.get(i2) ? new THREE.Color(this.colors.get(i2)) : new THREE.Color(0.2, 0.2, 0.3);
+                    eCol[0] = c1.r; eCol[1] = c1.g; eCol[2] = c1.b;
+                    eCol[3] = c2.r; eCol[4] = c2.g; eCol[5] = c2.b;
+                    
+                    geom.attributes.position.needsUpdate = true;
+                    geom.attributes.color.needsUpdate = true;
+                });
+            }
+
+            updateScoreboard(isCritical = false) {
+                // Reset scores
+                this.teamScores = {cyan: {v:0,e:0,f:0,c:0}, magenta: {v:0,e:0,f:0,c:0}, lime: {v:0,e:0,f:0,c:0}};
+                
+                // Count colored vertices
+                this.colors.forEach((color, vertexIdx) => {
+                    const team = color === 0x00FFFF ? 'cyan' : color === 0xFF00FF ? 'magenta' : 'lime';
+                    this.teamScores[team].v++;
+                });
+
+                // Count colored edges
+                this.edges.forEach(([v1, v2]) => {
+                    const c1 = this.colors.get(v1);
+                    const c2 = this.colors.get(v2);
+                    if(c1 && c2 && c1 === c2) {
+                        const team = c1 === 0x00FFFF ? 'cyan' : c1 === 0xFF00FF ? 'magenta' : 'lime';
+                        this.teamScores[team].e++;
+                    }
+                });
+
+                // Count colored faces
+                this.faces.forEach(face => {
+                    const faceColors = face.map(v => this.colors.get(v)).filter(c => c);
+                    if(faceColors.length === face.length && faceColors.every(c => c === faceColors[0])) {
+                        const team = faceColors[0] === 0x00FFFF ? 'cyan' : faceColors[0] === 0xFF00FF ? 'magenta' : 'lime';
+                        this.teamScores[team].f++;
+                    }
+                });
+
+                // Count colored cells
+                this.cells.forEach(cell => {
+                    const cellFaceColors = [];
+                    let allSameColor = true;
+                    let cellColor = null;
+                    
+                    cell.forEach(faceIdx => {
+                        const face = this.faces[faceIdx];
+                        const faceColors = face.map(v => this.colors.get(v)).filter(c => c);
+                        if(faceColors.length === face.length && faceColors.every(c => c === faceColors[0])) {
+                            if(cellColor === null) {
+                                cellColor = faceColors[0];
+                            } else if(cellColor !== faceColors[0]) {
+                                allSameColor = false;
+                            }
+                        } else {
+                            allSameColor = false;
+                        }
+                    });
+                    
+                    if(allSameColor && cellColor) {
+                        const team = cellColor === 0x00FFFF ? 'cyan' : cellColor === 0xFF00FF ? 'magenta' : 'lime';
+                        this.teamScores[team].c++;
+                    }
+                });
+
+                // Update scoreboard display
+                document.getElementById('cyan-score').textContent = `V:${this.teamScores.cyan.v} E:${this.teamScores.cyan.e} F:${this.teamScores.cyan.f} C:${this.teamScores.cyan.c}`;
+                document.getElementById('magenta-score').textContent = `V:${this.teamScores.magenta.v} E:${this.teamScores.magenta.e} F:${this.teamScores.magenta.f} C:${this.teamScores.magenta.c}`;
+                document.getElementById('lime-score').textContent = `V:${this.teamScores.lime.v} E:${this.teamScores.lime.e} F:${this.teamScores.lime.f} C:${this.teamScores.lime.c}`;
+            }
+
+            updateColors() {
+                this.updatePositions(); // Colors are computed in updatePositions
+            }
+
+            updateStats() {
+                const activeCount = this.edgeIntersections.filter(inter => this.crosses(inter.v1, inter.v2)).length;
+                
+                // Count vertices exactly at current W plane
+                const verticesAtW = this.verts.filter(v => Math.abs(v.w - this.w) < 0.001).length;
+                let crossText = `Cross: V:${activeCount} E:${Math.floor(activeCount*1.5)} F:${Math.floor(activeCount*0.8)}`;
+                if(verticesAtW > 0) {
+                    crossText += ` <span style="color:#FF6B35">(${verticesAtW} aligned!)</span>`;
+                }
+                
+                document.getElementById('object-stats').innerHTML = `Vertices: ${this.verts.length} | Edges: ${this.edges.length} | Faces: ${this.faces.length} | Cells: ${this.cells.length}`;
+                document.getElementById('cross-stats').innerHTML = crossText;
+            }
+
+            updateCam() {
+                const rx = this.camRot.x * Math.PI/180;
+                const ry = this.camRot.y * Math.PI/180;
+                const pos = new THREE.Vector3(Math.sin(rx)*Math.cos(ry), Math.sin(ry), Math.cos(rx)*Math.cos(ry)).multiplyScalar(this.camDist);
+                this.camera.position.copy(pos);
+                this.camera.lookAt(0,0,0);
+            }
+
+            animate() {
+                requestAnimationFrame(() => this.animate());
+                this.renderer.render(this.scene, this.camera);
+            }
+        }
+
+        new FourDViewer();
+    </script>
+</body>
+</html>
