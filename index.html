@@ -7,29 +7,85 @@
     <style>
         body{margin:0;padding:0;background:#111;color:white;font-family:Arial,sans-serif;overflow:hidden}
         #container{position:relative;width:100vw;height:100vh}
-        
+
         /* Top slider panel */
         #slider-panel{position:absolute;top:10px;left:10px;right:10px;height:50px;background:rgba(0,0,0,0.8);border-radius:8px;z-index:100;display:flex;align-items:center;padding:0 20px;gap:15px}
         #w-slider{flex:1;height:30px;background:#333;border-radius:4px;cursor:pointer}
         #w-slider::-webkit-slider-track{background:#333;height:30px;border-radius:4px}
         #w-slider::-moz-range-track{background:#333;height:30px;border-radius:4px}
         #slider-value{min-width:80px;text-align:center;font-family:monospace}
-        
-        /* Input panel */
-        #input-panel{position:absolute;top:80px;left:10px;width:300px;max-height:250px;background:rgba(0,0,0,0.8);padding:15px;border-radius:8px;z-index:100;display:flex;flex-direction:column;gap:10px}
-        #text-input{width:100%;height:150px;background:#333;border:1px solid #555;color:white;padding:8px;font-family:monospace;resize:vertical}
-        #load-button,#sample-button{padding:8px 16px;border:none;color:white;cursor:pointer;border-radius:4px;font-size:12px}
+
+        /* Library sidebar */
+        #library-panel{position:absolute;top:70px;left:10px;width:272px;max-height:calc(100vh - 90px);background:rgba(0,0,0,0.92);border-radius:8px;z-index:100;display:flex;flex-direction:column;overflow:hidden;border:1px solid rgba(255,255,255,0.08)}
+        #library-header{padding:7px 12px;background:rgba(255,255,255,0.05);display:flex;align-items:center;gap:8px;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,0.07)}
+        #library-header span{font-size:11px;font-weight:bold;flex:1;letter-spacing:.5px;color:#aaa}
+        #pick-folder-btn{display:none}
+        #library-search{margin:5px 8px;padding:4px 8px;background:#1e1e1e;border:1px solid #3a3a3a;color:white;border-radius:4px;font-size:11px;width:calc(100% - 16px);box-sizing:border-box}
+        #library-search::placeholder{color:#555}
+        #library-list{overflow-y:auto;flex:1}
+        #library-list::-webkit-scrollbar{width:5px}
+        #library-list::-webkit-scrollbar-track{background:#111}
+        #library-list::-webkit-scrollbar-thumb{background:#333;border-radius:3px}
+
+        /* Zone headers */
+        .zone-header{display:flex;align-items:center;gap:6px;padding:4px 10px;font-size:9px;font-weight:bold;letter-spacing:1.2px;text-transform:uppercase;flex-shrink:0;position:sticky;top:0;z-index:1}
+        .zone-header .zh-label{flex:1}
+        .zone-header .zh-count{opacity:.5;font-weight:normal}
+        .zone-quick{background:#111;color:#555;border-top:1px solid #1e1e1e}
+        .zone-standard{background:rgba(180,140,30,0.1);color:#c8a84a;border-top:1px solid rgba(180,140,30,0.2);border-bottom:1px solid rgba(180,140,30,0.1)}
+        .zone-epic{background:rgba(200,80,30,0.08);color:#b05030;border-top:1px solid rgba(200,80,30,0.18)}
+        .zone-standard .zh-label::before{content:"⭑ "}
+
+        /* Library items - 2-line dense format */
+        .lib-item{padding:4px 10px 4px 12px;cursor:pointer;border-left:2px solid transparent;transition:background .1s}
+        .lib-item:hover{background:rgba(255,255,255,0.06);border-left-color:rgba(255,255,255,0.2)}
+        .lib-item.active{background:rgba(33,150,243,0.15);border-left-color:#2196F3}
+        .lib-item.active .lib-name{color:#90CAF9}
+
+        .lib-name{font-size:11.5px;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .lib-stats{font-size:9.5px;font-family:monospace;line-height:1.3;letter-spacing:.2px;white-space:nowrap}
+
+        /* Zone-tinted item text */
+        .lib-item.z-quick .lib-name{color:#777}
+        .lib-item.z-quick .lib-stats{color:#444}
+        .lib-item.z-quick:hover .lib-name{color:#aaa}
+        .lib-item.z-quick:hover .lib-stats{color:#666}
+
+        .lib-item.z-standard .lib-name{color:#ccc}
+        .lib-item.z-standard .lib-stats{color:#666}
+        .lib-item.z-standard:hover .lib-name{color:#fff}
+        .lib-item.z-standard:hover .lib-stats{color:#999}
+
+        .lib-item.z-epic .lib-name{color:#a06040}
+        .lib-item.z-epic .lib-stats{color:#6a3820}
+        .lib-item.z-epic:hover .lib-name{color:#d08060}
+        .lib-item.z-epic:hover .lib-stats{color:#8a5030}
+
+        /* Stat colors within the stats line */
+        .s-v{color:#6a9fd8}.s-e{color:#7a7a7a}.s-f{color:#7da87a}.s-c{color:#c87878}.s-w{color:#c87a3a}
+        .lib-item.z-quick .s-v,.lib-item.z-quick .s-e,.lib-item.z-quick .s-f,.lib-item.z-quick .s-c,.lib-item.z-quick .s-w{opacity:.5}
+        .lib-item.z-epic .s-v,.lib-item.z-epic .s-e,.lib-item.z-epic .s-f,.lib-item.z-epic .s-c,.lib-item.z-epic .s-w{opacity:.55}
+        .lib-item:hover .s-v,.lib-item:hover .s-e,.lib-item:hover .s-f,.lib-item:hover .s-c,.lib-item:hover .s-w{opacity:1!important}
+
+        #library-hint{padding:12px;font-size:11px;color:#555;text-align:center;line-height:1.6}
+
+        /* Input panel (collapsed by default when library active) */
+        #input-panel{position:absolute;top:70px;right:10px;width:260px;max-height:200px;background:rgba(0,0,0,0.8);padding:12px;border-radius:8px;z-index:100;display:flex;flex-direction:column;gap:8px}
+        #text-input{width:100%;height:100px;background:#333;border:1px solid #555;color:white;padding:8px;font-family:monospace;font-size:11px;resize:vertical;box-sizing:border-box}
+        #load-button,#sample-button{padding:6px 12px;border:none;color:white;cursor:pointer;border-radius:4px;font-size:11px}
         #load-button{background:#4CAF50}#load-button:hover{background:#45a049}
-        #sample-button{background:#2196F3}#sample-button:hover{background:#1976D2}
-        
-        /* Stats panel with integrated scoreboard */
-        #stats-panel{position:absolute;top:80px;right:10px;background:rgba(0,0,0,0.8);padding:10px;border-radius:4px;font-family:monospace;z-index:100;min-width:180px;font-size:11px}
+        #sample-button{background:#555}#sample-button:hover{background:#666}
+
+        /* Stats panel */
+        #stats-panel{position:absolute;bottom:50px;right:10px;background:rgba(0,0,0,0.8);padding:10px;border-radius:4px;font-family:monospace;z-index:100;min-width:180px;font-size:11px}
         .team-row{display:flex;justify-content:space-between;margin:2px 0}
         .cyan{color:#00FFFF}
         .magenta{color:#FF00FF}
         .lime{color:#00FF00}
-        
-        #instructions{position:absolute;bottom:10px;left:10px;background:rgba(0,0,0,0.8);padding:10px;border-radius:4px;font-size:12px;z-index:100;max-width:300px}
+
+        #instructions{position:absolute;bottom:10px;left:10px;background:rgba(0,0,0,0.8);padding:8px 10px;border-radius:4px;font-size:11px;z-index:100;max-width:260px}
+        #shape-title{position:absolute;top:70px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.7);padding:4px 14px;border-radius:4px;font-size:13px;z-index:100;pointer-events:none;opacity:0;transition:opacity 0.3s}
+        #shape-title.visible{opacity:1}
     </style>
 </head>
 <body>
@@ -40,36 +96,42 @@
             <input type="range" id="w-slider" min="-1" max="1" step="0.01" value="0">
             <span id="slider-value">0.00</span>
         </div>
-        
-        <!-- Input panel -->
-        <div id="input-panel">
-            <textarea id="text-input" placeholder="Paste OFF format data here..."></textarea>
-            <div style="display:flex;gap:10px">
-                <button id="load-button">Load OFF</button>
-                <button id="sample-button">Sample Tesseract</button>
+
+        <!-- Shape title -->
+        <div id="shape-title"></div>
+
+        <!-- Library sidebar -->
+        <div id="library-panel">
+            <div id="library-header">
+                <span>Polytope Library</span>
+                <button id="pick-folder-btn">Open Folder</button>
+            </div>
+            <input id="library-search" type="text" placeholder="Search..." style="display:none">
+            <div id="library-list">
+                <div id="library-hint">Click <strong>Open Folder</strong> and select your<br>miratope <code>lib/4D</code> folder</div>
             </div>
         </div>
-        
+
+        <!-- Manual OFF input panel -->
+        <div id="input-panel">
+            <textarea id="text-input" placeholder="Paste OFF data here..."></textarea>
+            <div style="display:flex;gap:8px">
+                <button id="load-button">Load OFF</button>
+                <button id="sample-button">Tesseract</button>
+            </div>
+        </div>
+
         <!-- Stats panel with scoreboard -->
         <div id="stats-panel">
             <div id="object-stats">Vertices: 0 | Edges: 0 | Faces: 0 | Cells: 0</div>
             <div id="cross-stats">Cross: V:0 E:0 F:0</div>
             <div style="margin:5px 0;border-bottom:1px solid #444"></div>
-            <div class="team-row">
-                <span class="cyan">Cyan:</span>
-                <span id="cyan-score">V:0 E:0 F:0 C:0</span>
-            </div>
-            <div class="team-row">
-                <span class="magenta">Magenta:</span>
-                <span id="magenta-score">V:0 E:0 F:0 C:0</span>
-            </div>
-            <div class="team-row">
-                <span class="lime">Lime:</span>
-                <span id="lime-score">V:0 E:0 F:0 C:0</span>
-            </div>
+            <div class="team-row"><span class="cyan">Cyan:</span><span id="cyan-score">V:0 E:0 F:0 C:0</span></div>
+            <div class="team-row"><span class="magenta">Magenta:</span><span id="magenta-score">V:0 E:0 F:0 C:0</span></div>
+            <div class="team-row"><span class="lime">Lime:</span><span id="lime-score">V:0 E:0 F:0 C:0</span></div>
         </div>
-        
-        <div id="instructions">Left-click: Color cross-section vertices<br>Right-click + drag: Rotate camera<br>Mouse wheel: Zoom<br>W-slider: 4D cross-section plane<br><br><strong>White/bright:</strong> Current cross-section<br><strong>Dark/faded:</strong> Full 4D object reference</div>
+
+        <div id="instructions">Left-click: Color cross-section vertices<br>Right-click + drag: Rotate camera<br>Mouse wheel: Zoom<br>W-slider: 4D cross-section plane</div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -103,10 +165,9 @@
                 
                 // Persistent geometries
                 this.crossVertGeom = null;
-                this.crossEdgeGeoms = [];
-                this.crossFaceGeoms = [];
+                this.crossEdgeGeom = null;
                 this.refVertGeom = null;
-                this.refEdgeGeoms = [];
+                this.refEdgeGeom = null;
                 
                 this.init();
                 this.setupEvents();
@@ -292,7 +353,10 @@
                 this.colors.clear();
                 this.updateScoreboard();
 
-                const lines = content.split('\n').filter(l => l.trim() && !l.startsWith('#'));
+                const lines = content.split('\n').filter(l => {
+                    const t = l.trim();
+                    return t && !t.startsWith('#') && !/^[0-9]?OFF/.test(t);
+                });
                 if(!lines.length) return;
 
                 let i = 0;
@@ -568,9 +632,8 @@
                 this.vGroup.clear();
                 this.eGroup.clear();
                 this.fGroup.clear();
-                this.crossEdgeGeoms = [];
-                this.crossFaceGeoms = [];
-                this.refEdgeGeoms = [];
+                this.crossEdgeGeom = null;
+                this.refEdgeGeom = null;
 
                 if(!this.verts.length) return;
 
@@ -594,19 +657,16 @@
                 ctx.fillRect(0, 0, 32, 32);
                 const circleTexture = new THREE.CanvasTexture(canvas);
 
+                const maxVerts = this.edgeIntersections.length;
+
                 // Cross-section vertex geometry - main colored points
                 this.crossVertGeom = new THREE.BufferGeometry();
-                const maxVerts = this.edgeIntersections.length;
                 this.crossVertGeom.setAttribute('position', new THREE.BufferAttribute(new Float32Array(maxVerts * 3), 3));
                 this.crossVertGeom.setAttribute('color', new THREE.BufferAttribute(new Float32Array(maxVerts * 3), 3));
                 this.crossVertGeom.setDrawRange(0, 0);
                 this.vGroup.add(new THREE.Points(this.crossVertGeom, new THREE.PointsMaterial({
-                    size: 16,
-                    vertexColors: true,
-                    sizeAttenuation: false,
-                    map: circleTexture,
-                    alphaTest: 0.1,
-                    transparent: true
+                    size: 16, vertexColors: true, sizeAttenuation: false,
+                    map: circleTexture, alphaTest: 0.1, transparent: true
                 })));
 
                 // Cross-section vertex outline geometry - white outlines
@@ -614,54 +674,32 @@
                 this.crossVertOutlineGeom.setAttribute('position', new THREE.BufferAttribute(new Float32Array(maxVerts * 3), 3));
                 this.crossVertOutlineGeom.setDrawRange(0, 0);
                 this.vGroup.add(new THREE.Points(this.crossVertOutlineGeom, new THREE.PointsMaterial({
-                    size: 22,
-                    color: 0xffffff,
-                    sizeAttenuation: false,
-                    transparent: true,
-                    opacity: 1.0,
-                    map: circleTexture,
-                    alphaTest: 0.1
+                    size: 22, color: 0xffffff, sizeAttenuation: false,
+                    transparent: true, opacity: 1.0, map: circleTexture, alphaTest: 0.1
                 })));
-                // Pre-create edge geometries
-                this.edgeIntersections.forEach(() => {
-                    const geom = new THREE.BufferGeometry();
-                    geom.setAttribute('position', new THREE.BufferAttribute(new Float32Array(6), 3));
-                    geom.setAttribute('color', new THREE.BufferAttribute(new Float32Array(6), 3));
-                    geom.setDrawRange(0, 0);
-                    this.crossEdgeGeoms.push(geom);
-                    this.eGroup.add(new THREE.Line(geom, new THREE.LineBasicMaterial({vertexColors:true, linewidth:2})));
-                });
 
-                // Pre-create face geometries  
-                this.facePolygons.forEach(fp => {
-                    const geom = new THREE.BufferGeometry();
-                    const maxFaceVerts = fp.edgeIndices.length;
-                    geom.setAttribute('position', new THREE.BufferAttribute(new Float32Array(maxFaceVerts * 3), 3));
-                    geom.setAttribute('color', new THREE.BufferAttribute(new Float32Array(maxFaceVerts * 3), 3));
-                    geom.setIndex(new THREE.BufferAttribute(new Uint32Array(maxFaceVerts), 1));
-                    geom.setDrawRange(0, 0);
-                    this.crossFaceGeoms.push(geom);
-                    this.fGroup.add(new THREE.Mesh(geom, new THREE.MeshBasicMaterial({vertexColors:true, side:THREE.DoubleSide, transparent:true, opacity:0.5})));
-                });
+                // Single LineSegments for all cross-section edges (2 verts per segment)
+                // Worst case: each face contributes face.length segments
+                const maxSegs = this.faces.reduce((s, f) => s + f.length, 0);
+                this.crossEdgeGeom = new THREE.BufferGeometry();
+                this.crossEdgeGeom.setAttribute('position', new THREE.BufferAttribute(new Float32Array(maxSegs * 6), 3));
+                this.crossEdgeGeom.setAttribute('color', new THREE.BufferAttribute(new Float32Array(maxSegs * 6), 3));
+                this.crossEdgeGeom.setDrawRange(0, 0);
+                this.eGroup.add(new THREE.LineSegments(this.crossEdgeGeom, new THREE.LineBasicMaterial({vertexColors: true, linewidth: 2})));
             }
 
             createRefGeometries() {
                 // Reference vertices
                 this.refVertGeom = new THREE.BufferGeometry();
-                const refPos = new Float32Array(this.verts.length * 3);
-                const refCol = new Float32Array(this.verts.length * 3);
-                this.refVertGeom.setAttribute('position', new THREE.BufferAttribute(refPos, 3));
-                this.refVertGeom.setAttribute('color', new THREE.BufferAttribute(refCol, 3));
+                this.refVertGeom.setAttribute('position', new THREE.BufferAttribute(new Float32Array(this.verts.length * 3), 3));
+                this.refVertGeom.setAttribute('color', new THREE.BufferAttribute(new Float32Array(this.verts.length * 3), 3));
                 this.vGroup.add(new THREE.Points(this.refVertGeom, new THREE.PointsMaterial({size:4, vertexColors:true, sizeAttenuation:false, transparent:true, opacity:0.4})));
 
-                // Reference edges
-                this.edges.forEach(() => {
-                    const geom = new THREE.BufferGeometry();
-                    geom.setAttribute('position', new THREE.BufferAttribute(new Float32Array(6), 3));
-                    geom.setAttribute('color', new THREE.BufferAttribute(new Float32Array(6), 3));
-                    this.refEdgeGeoms.push(geom);
-                    this.eGroup.add(new THREE.Line(geom, new THREE.LineBasicMaterial({vertexColors:true, transparent:true, opacity:0.3})));
-                });
+                // Single LineSegments for all reference edges
+                this.refEdgeGeom = new THREE.BufferGeometry();
+                this.refEdgeGeom.setAttribute('position', new THREE.BufferAttribute(new Float32Array(this.edges.length * 6), 3));
+                this.refEdgeGeom.setAttribute('color', new THREE.BufferAttribute(new Float32Array(this.edges.length * 6), 3));
+                this.eGroup.add(new THREE.LineSegments(this.refEdgeGeom, new THREE.LineBasicMaterial({vertexColors:true, transparent:true, opacity:0.3})));
             }
 
             getActiveIntersections() {
@@ -678,65 +716,56 @@
             updatePositions() {
                 if(!this.crossVertGeom) return;
 
-                // Update cross-section
                 const activeInters = this.getActiveIntersections();
 
-                // Update vertex positions
+                // Cross-section vertices
                 const pos = this.crossVertGeom.attributes.position.array;
                 const col = this.crossVertGeom.attributes.color.array;
+                const outPos = this.crossVertOutlineGeom.attributes.position.array;
                 activeInters.forEach((inter, i) => {
                     const p = this.project(inter);
                     pos[i*3] = p.x; pos[i*3+1] = p.y; pos[i*3+2] = p.z;
+                    outPos[i*3] = p.x; outPos[i*3+1] = p.y; outPos[i*3+2] = p.z;
                     const c = this.getColor(inter);
                     col[i*3] = c.r; col[i*3+1] = c.g; col[i*3+2] = c.b;
                 });
                 this.crossVertGeom.attributes.position.needsUpdate = true;
                 this.crossVertGeom.attributes.color.needsUpdate = true;
+                this.crossVertOutlineGeom.attributes.position.needsUpdate = true;
                 this.crossVertGeom.setDrawRange(0, activeInters.length);
+                this.crossVertOutlineGeom.setDrawRange(0, activeInters.length);
 
-                // Update edge positions (simplified - just show edges between adjacent intersections)
-                let edgeCount = 0;
+                // Cross-section edges — write all segments into single LineSegments buffer
+                const ePos = this.crossEdgeGeom.attributes.position.array;
+                const eCol = this.crossEdgeGeom.attributes.color.array;
+                let segVerts = 0;
                 this.facePolygons.forEach(fp => {
                     const faceInters = [];
                     fp.edgeIndices.forEach(edgeIdx => {
                         const inter = this.edgeIntersections[edgeIdx];
                         if(this.crosses(inter.v1, inter.v2)) {
-                            const lerpVert = this.lerp(inter.v1, inter.v2);
-                            faceInters.push({...inter, ...lerpVert});
+                            faceInters.push({...inter, ...this.lerp(inter.v1, inter.v2)});
                         }
                     });
-                    
-                    if(faceInters.length >= 2) {
-                        for(let i = 0; i < faceInters.length && edgeCount < this.crossEdgeGeoms.length; i++) {
-                            const next = (i + 1) % faceInters.length;
-                            const geom = this.crossEdgeGeoms[edgeCount];
-                            const ePos = geom.attributes.position.array;
-                            const eCol = geom.attributes.color.array;
-                            
-                            const p1 = this.project(faceInters[i]);
-                            const p2 = this.project(faceInters[next]);
-                            ePos[0] = p1.x; ePos[1] = p1.y; ePos[2] = p1.z;
-                            ePos[3] = p2.x; ePos[4] = p2.y; ePos[5] = p2.z;
-                            
-                            const c1 = this.getColor(faceInters[i]);
-                            const c2 = this.getColor(faceInters[next]);
-                            eCol[0] = c1.r; eCol[1] = c1.g; eCol[2] = c1.b;
-                            eCol[3] = c2.r; eCol[4] = c2.g; eCol[5] = c2.b;
-                            
-                            geom.attributes.position.needsUpdate = true;
-                            geom.attributes.color.needsUpdate = true;
-                            geom.setDrawRange(0, 2);
-                            edgeCount++;
-                        }
+                    if(faceInters.length < 2) return;
+                    for(let i = 0; i < faceInters.length; i++) {
+                        const next = (i + 1) % faceInters.length;
+                        const p1 = this.project(faceInters[i]);
+                        const p2 = this.project(faceInters[next]);
+                        const c1 = this.getColor(faceInters[i]);
+                        const c2 = this.getColor(faceInters[next]);
+                        const b = segVerts * 3;
+                        ePos[b]   = p1.x; ePos[b+1] = p1.y; ePos[b+2] = p1.z;
+                        ePos[b+3] = p2.x; ePos[b+4] = p2.y; ePos[b+5] = p2.z;
+                        eCol[b]   = c1.r; eCol[b+1] = c1.g; eCol[b+2] = c1.b;
+                        eCol[b+3] = c2.r; eCol[b+4] = c2.g; eCol[b+5] = c2.b;
+                        segVerts += 2;
                     }
                 });
+                this.crossEdgeGeom.attributes.position.needsUpdate = true;
+                this.crossEdgeGeom.attributes.color.needsUpdate = true;
+                this.crossEdgeGeom.setDrawRange(0, segVerts);
 
-                // Hide unused edge geometries
-                for(let i = edgeCount; i < this.crossEdgeGeoms.length; i++) {
-                    this.crossEdgeGeoms[i].setDrawRange(0, 0);
-                }
-
-                // Update reference geometry
                 this.updateRefPositions();
             }
 
@@ -754,24 +783,21 @@
                 this.refVertGeom.attributes.position.needsUpdate = true;
                 this.refVertGeom.attributes.color.needsUpdate = true;
 
+                const ePos = this.refEdgeGeom.attributes.position.array;
+                const eCol = this.refEdgeGeom.attributes.color.array;
                 this.edges.forEach(([i1, i2], i) => {
-                    const geom = this.refEdgeGeoms[i];
-                    const ePos = geom.attributes.position.array;
-                    const eCol = geom.attributes.color.array;
-                    
                     const p1 = this.project(this.verts[i1]);
                     const p2 = this.project(this.verts[i2]);
-                    ePos[0] = p1.x; ePos[1] = p1.y; ePos[2] = p1.z;
-                    ePos[3] = p2.x; ePos[4] = p2.y; ePos[5] = p2.z;
-                    
                     const c1 = this.colors.get(i1) ? new THREE.Color(this.colors.get(i1)) : new THREE.Color(0.2, 0.2, 0.3);
                     const c2 = this.colors.get(i2) ? new THREE.Color(this.colors.get(i2)) : new THREE.Color(0.2, 0.2, 0.3);
-                    eCol[0] = c1.r; eCol[1] = c1.g; eCol[2] = c1.b;
-                    eCol[3] = c2.r; eCol[4] = c2.g; eCol[5] = c2.b;
-                    
-                    geom.attributes.position.needsUpdate = true;
-                    geom.attributes.color.needsUpdate = true;
+                    const b = i * 6;
+                    ePos[b]   = p1.x; ePos[b+1] = p1.y; ePos[b+2] = p1.z;
+                    ePos[b+3] = p2.x; ePos[b+4] = p2.y; ePos[b+5] = p2.z;
+                    eCol[b]   = c1.r; eCol[b+1] = c1.g; eCol[b+2] = c1.b;
+                    eCol[b+3] = c2.r; eCol[b+4] = c2.g; eCol[b+5] = c2.b;
                 });
+                this.refEdgeGeom.attributes.position.needsUpdate = true;
+                this.refEdgeGeom.attributes.color.needsUpdate = true;
             }
 
             updateScoreboard(isCritical = false) {
@@ -867,7 +893,138 @@
             }
         }
 
-        new FourDViewer();
+        const viewer = new FourDViewer();
+
+        // --- Polytope Library ---
+        (function() {
+            let allShapes = [];
+            let activeItem = null;
+
+            const listEl  = document.getElementById('library-list');
+            const searchEl = document.getElementById('library-search');
+            const titleEl  = document.getElementById('shape-title');
+
+            // Zone boundaries by vertex count
+            const QUICK_MAX    = 64;   // ≤ 64v  — fast games
+            const STANDARD_MAX = 400;  // 65–400v — recommended
+            // > 400v — epic
+
+            function zone(v) {
+                return v <= QUICK_MAX ? 'quick' : v <= STANDARD_MAX ? 'standard' : 'epic';
+            }
+
+            const ZONE_META = {
+                quick:    { cls:'zone-quick',    label:'Quick',       sub:'fast games'   },
+                standard: { cls:'zone-standard', label:'Recommended', sub:'sweet spot'   },
+                epic:     { cls:'zone-epic',     label:'Epic',        sub:'advanced'     },
+            };
+
+            fetch('lib/manifest.json')
+                .then(r => r.json())
+                .then(data => {
+                    allShapes = (Array.isArray(data) ? data : [data])
+                        .sort((a, b) => a.v - b.v);
+                    renderList(allShapes);
+                })
+                .catch(() => {
+                    listEl.innerHTML = '<div style="padding:14px;color:#c55;font-size:11px;text-align:center">Needs a local server.<br><code>python -m http.server 5174</code></div>';
+                });
+
+            searchEl.oninput = () => {
+                const q = searchEl.value.toLowerCase().trim();
+                const filtered = q
+                    ? allShapes.filter(s => s.name.toLowerCase().includes(q)).sort((a,b) => a.v - b.v)
+                    : allShapes;
+                renderList(filtered, !!q);
+            };
+
+            function fmt(n) {
+                return n >= 1000 ? (n/1000).toFixed(1)+'k' : String(n);
+            }
+
+            function statsHTML(s) {
+                return `<span class="s-v">${fmt(s.v)}v</span> `
+                     + `<span class="s-e">${fmt(s.e)}e</span> `
+                     + `<span class="s-f">${fmt(s.f)}f</span> `
+                     + `<span class="s-c">${fmt(s.c)}c</span>`
+                     + `<span style="color:#333"> · </span>`
+                     + `<span class="s-w">${s.w}⊗</span>`;
+            }
+
+            function makeItem(s) {
+                const z   = zone(s.v);
+                const el  = document.createElement('div');
+                el.className = `lib-item z-${z}`;
+                el.title = `${s.group} · ${s.v}v ${s.e}e ${s.f}f ${s.c}c · ${s.w} W-planes`;
+                el.innerHTML = `<div class="lib-name">${s.name}</div>`
+                             + `<div class="lib-stats">${statsHTML(s)}</div>`;
+                el.onclick = () => loadShape(s, el);
+                return el;
+            }
+
+            function zoneHeader(z, count) {
+                const m   = ZONE_META[z];
+                const div = document.createElement('div');
+                div.className = `zone-header ${m.cls}`;
+                div.innerHTML = `<span class="zh-label">${m.label}</span>`
+                              + `<span class="zh-count">${m.sub} · ${count}</span>`;
+                return div;
+            }
+
+            function renderList(shapes, flat = false) {
+                listEl.innerHTML = '';
+                if(!shapes.length) {
+                    listEl.innerHTML = '<div style="padding:12px;color:#555;font-size:11px;text-align:center">No results</div>';
+                    return;
+                }
+
+                if(flat) {
+                    shapes.forEach(s => listEl.appendChild(makeItem(s)));
+                    return;
+                }
+
+                // Build ordered zones: standard (middle/recommended) at visual top, then quick above, epic below
+                // BUT scroll position starts at top. We want standard visible first.
+                // Layout order: quick → standard → epic, but standard gets prominent header.
+                const groups = { quick:[], standard:[], epic:[] };
+                shapes.forEach(s => groups[zone(s.v)].push(s));
+
+                ['quick','standard','epic'].forEach(z => {
+                    if(!groups[z].length) return;
+                    listEl.appendChild(zoneHeader(z, groups[z].length));
+                    groups[z].forEach(s => listEl.appendChild(makeItem(s)));
+                });
+
+                // Scroll so that the standard zone header is near the top (skip the quick section)
+                requestAnimationFrame(() => {
+                    const stdHeader = listEl.querySelector('.zone-standard');
+                    if(stdHeader) stdHeader.scrollIntoView({ block:'start' });
+                });
+            }
+
+            async function loadShape(s, el) {
+                if(activeItem) activeItem.classList.remove('active');
+                activeItem = el;
+                el.classList.add('active');
+                const nameDiv = el.querySelector('.lib-name');
+                const orig = nameDiv.textContent;
+                nameDiv.textContent = orig + '  …';
+                try {
+                    const text = await fetch(s.path).then(r => r.text());
+                    document.getElementById('text-input').value = text;
+                    viewer.parseOFF(text);
+                    viewer.rebuild();
+                    titleEl.textContent = s.name;
+                    titleEl.classList.add('visible');
+                    clearTimeout(titleEl._timer);
+                    titleEl._timer = setTimeout(() => titleEl.classList.remove('visible'), 3000);
+                } catch(e) {
+                    console.error('Failed to load', s.name, e);
+                } finally {
+                    nameDiv.textContent = orig;
+                }
+            }
+        })();
     </script>
 </body>
 </html>
