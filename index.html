@@ -86,6 +86,109 @@
         #instructions{position:absolute;bottom:10px;left:10px;background:rgba(0,0,0,0.8);padding:8px 10px;border-radius:4px;font-size:11px;z-index:100;max-width:260px}
         #shape-title{position:absolute;top:70px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.7);padding:4px 14px;border-radius:4px;font-size:13px;z-index:100;pointer-events:none;opacity:0;transition:opacity 0.3s}
         #shape-title.visible{opacity:1}
+
+        /* ─── SETTINGS BUTTON ─── */
+        #settings-btn{padding:4px 10px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);color:#aaa;border-radius:4px;cursor:pointer;font-size:14px;line-height:1;flex-shrink:0}
+        #settings-btn:hover{background:rgba(255,255,255,0.18);color:#fff}
+
+        /* ─── SETTINGS MODAL ─── */
+        #settings-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:500;display:none;align-items:center;justify-content:center}
+        #settings-overlay.open{display:flex}
+        #settings-box{background:#141418;border:1px solid #2a2a35;border-radius:10px;width:420px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.8)}
+        #settings-box::-webkit-scrollbar{width:4px}
+        #settings-box::-webkit-scrollbar-thumb{background:#333;border-radius:2px}
+        #settings-head{display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid #222;background:#18181e}
+        #settings-head span{font-size:13px;font-weight:700;color:#ddd;flex:1;letter-spacing:.3px}
+        #settings-close{background:none;border:none;color:#666;font-size:18px;cursor:pointer;line-height:1;padding:2px 6px}
+        #settings-close:hover{color:#ccc}
+        .s-section{padding:12px 16px;border-bottom:1px solid #1e1e26}
+        .s-label{font-size:9.5px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:1px;margin-bottom:7px}
+        .s-opts{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:5px}
+        .opt-btn{padding:5px 12px;background:#1e1e26;border:1px solid #2a2a38;color:#888;border-radius:4px;cursor:pointer;font-size:11px;transition:all .15s}
+        .opt-btn:hover{border-color:#555;color:#bbb}
+        .opt-btn.sel{background:rgba(33,150,243,0.2);border-color:#2196F3;color:#90CAF9;font-weight:600}
+        .s-desc{font-size:10px;color:#555;margin-top:3px;min-height:14px;font-style:italic}
+        .s-score-viz{display:flex;gap:3px;align-items:flex-end;height:24px;margin-top:6px}
+        .s-bar{border-radius:2px 2px 0 0;display:flex;align-items:flex-start;justify-content:center;padding-top:2px;font-size:7px;font-weight:700;color:rgba(0,0,0,0.6);min-width:18px;transition:height .2s}
+        #start-game-btn{display:block;width:calc(100%-32px);margin:14px 16px;padding:10px;background:#2196F3;border:none;color:white;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.3px}
+        #start-game-btn:hover{background:#1976D2}
+        #start-game-btn:disabled{background:#333;color:#666;cursor:not-allowed}
+
+        /* Team color swatches in settings */
+        .team-swatch-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px}
+        .team-swatch{width:18px;height:18px;border-radius:3px;border:2px solid transparent;cursor:default}
+        .team-swatch.active-swatch{border-color:white}
+
+        /* ─── GAME OVERLAY (below slider) ─── */
+        #game-bar{position:absolute;top:70px;left:290px;right:10px;height:36px;background:rgba(0,0,0,0.85);border-radius:6px;z-index:99;display:none;align-items:center;padding:0 12px;gap:10px;border:1px solid rgba(255,255,255,0.06)}
+        #game-bar.visible{display:flex}
+        #active-dot{width:11px;height:11px;border-radius:50%;flex-shrink:0;box-shadow:0 0 8px currentColor}
+        #active-name{font-size:12px;font-weight:700;flex-shrink:0}
+        #turn-info{font-size:10px;color:#666;flex:1}
+        #phase-badge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;letter-spacing:.5px;text-transform:uppercase}
+        .phase-claim{background:rgba(33,150,243,0.2);color:#5aabff;border:1px solid rgba(33,150,243,0.3)}
+        .phase-vote{background:rgba(180,130,30,0.2);color:#e0a030;border:1px solid rgba(180,130,30,0.3)}
+        .phase-choose{background:rgba(130,80,200,0.2);color:#b080e0;border:1px solid rgba(130,80,200,0.3)}
+        .phase-resolve{background:rgba(200,80,80,0.2);color:#e08080;border:1px solid rgba(200,80,80,0.3)}
+        .phase-ended{background:rgba(100,100,100,0.2);color:#888;border:1px solid #333}
+        #wplane-badge{font-size:9px;color:#c87a3a;font-family:monospace;background:rgba(200,120,50,0.1);padding:2px 7px;border-radius:3px;border:1px solid rgba(200,120,50,0.2)}
+        #claims-badge{font-size:9px;color:#aaa;margin-left:auto}
+
+        /* ─── GAME SCORE PANEL ─── */
+        #game-panel{position:absolute;bottom:10px;right:10px;width:230px;background:rgba(0,0,0,0.9);border:1px solid #222;border-radius:8px;z-index:100;display:none;flex-direction:column;overflow:hidden}
+        #game-panel.visible{display:flex}
+        #game-panel-head{padding:6px 10px;background:#18181e;font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.8px;border-bottom:1px solid #222}
+        .gteam-row{display:flex;align-items:center;gap:7px;padding:5px 10px;border-bottom:1px solid #1a1a1a;transition:background .15s}
+        .gteam-row.active-team-row{background:rgba(255,255,255,0.04)}
+        .gteam-row:last-of-type{border-bottom:none}
+        .gteam-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+        .gteam-name{font-size:10px;font-weight:600;flex:0 0 52px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .gteam-score{font-size:9.5px;font-family:monospace;color:#888;flex:1}
+        .gteam-total{font-size:10px;font-weight:700;min-width:28px;text-align:right}
+        .gteam-row.contested-anim .gteam-dot{animation:pulse-dot .6s infinite alternate}
+        @keyframes pulse-dot{from{opacity:.4}to{opacity:1}}
+        #game-actions{padding:8px 10px;display:flex;flex-direction:column;gap:5px;border-top:1px solid #1e1e1e}
+        #end-turn-btn{padding:7px;background:#1a2a3a;border:1px solid #2196F3;color:#90CAF9;border-radius:5px;cursor:pointer;font-size:11px;font-weight:700;letter-spacing:.3px}
+        #end-turn-btn:hover{background:#1e3a5a}
+        #end-turn-btn:disabled{border-color:#333;color:#555;background:#111;cursor:not-allowed}
+        #quit-btn{padding:5px;background:none;border:1px solid #333;color:#555;border-radius:5px;cursor:pointer;font-size:10px}
+        #quit-btn:hover{border-color:#666;color:#aaa}
+        #game-log{max-height:80px;overflow-y:auto;padding:4px 10px 6px;font-size:9px;color:#555;font-family:monospace}
+        #game-log::-webkit-scrollbar{width:3px}
+        #game-log::-webkit-scrollbar-thumb{background:#333;border-radius:2px}
+        .log-entry{padding:1px 0;border-bottom:1px solid #1a1a1a;line-height:1.5}
+
+        /* ─── VOTE / CHOICE PANEL ─── */
+        #action-panel{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(10,10,18,0.97);border:1px solid #2a2a3a;border-radius:8px;z-index:200;display:none;flex-direction:column;min-width:340px;max-width:520px}
+        #action-panel.visible{display:flex}
+        #action-panel-head{padding:8px 14px;background:#18181e;border-bottom:1px solid #222;font-size:11px;color:#bbb;font-weight:600;display:flex;align-items:center;gap:8px}
+        #action-panel-sub{font-size:9px;color:#555;flex:1}
+        #plane-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:5px;padding:10px 14px;max-height:200px;overflow-y:auto}
+        .plane-btn{padding:6px 8px;background:#1e1e28;border:1px solid #2a2a38;color:#aaa;border-radius:5px;cursor:pointer;font-size:10px;font-family:monospace;text-align:left;transition:all .15s}
+        .plane-btn:hover{background:#252535;border-color:#555;color:#fff}
+        .plane-btn.voted{background:rgba(200,120,50,0.15);border-color:#c87a3a;color:#e0a060}
+        .plane-btn .pb-w{font-size:8px;color:#666;display:block}
+        .plane-btn .pb-v{font-size:11px;font-weight:700}
+        #vote-status-bar{padding:6px 14px 10px;font-size:10px;color:#666;text-align:center}
+
+        /* ─── WIN SCREEN ─── */
+        #win-screen{position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:600;display:none;align-items:center;justify-content:center}
+        #win-screen.visible{display:flex}
+        #win-box{background:#141420;border:1px solid #2a2a40;border-radius:12px;padding:28px 36px;text-align:center;min-width:320px}
+        #win-title{font-size:22px;font-weight:700;margin-bottom:4px}
+        #win-sub{font-size:12px;color:#666;margin-bottom:20px}
+        #win-scores-list{text-align:left;margin-bottom:20px;font-family:monospace;font-size:11px}
+        .win-team-row{display:flex;align-items:center;gap:10px;padding:4px 0;border-bottom:1px solid #1e1e2a}
+        .win-team-row:last-child{border:none}
+        .win-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+        .win-rank{color:#555;min-width:18px}
+        .win-tname{flex:1}
+        .win-tscore{color:#aaa;text-align:right}
+        .win-btn{padding:8px 20px;border:none;border-radius:5px;cursor:pointer;font-size:12px;font-weight:600;margin:4px}
+        #play-again-btn{background:#2196F3;color:white}
+        #play-again-btn:hover{background:#1976D2}
+        #new-settings-btn{background:#2a2a3a;color:#aaa;border:1px solid #444}
+        #new-settings-btn:hover{color:white;border-color:#666}
     </style>
 </head>
 <body>
@@ -95,10 +198,21 @@
             <span style="font-size:12px;min-width:20px">W:</span>
             <input type="range" id="w-slider" min="-1" max="1" step="0.01" value="0">
             <span id="slider-value">0.00</span>
+            <button id="settings-btn" title="Game Settings">⚙</button>
         </div>
 
         <!-- Shape title -->
         <div id="shape-title"></div>
+
+        <!-- Game bar (below slider, visible during game) -->
+        <div id="game-bar">
+            <div id="active-dot"></div>
+            <span id="active-name"></span>
+            <span id="turn-info"></span>
+            <span id="phase-badge" class="phase-claim">Claim</span>
+            <span id="wplane-badge">W 1/1</span>
+            <span id="claims-badge">0/1 claimed</span>
+        </div>
 
         <!-- Library sidebar -->
         <div id="library-panel">
@@ -108,7 +222,7 @@
             </div>
             <input id="library-search" type="text" placeholder="Search..." style="display:none">
             <div id="library-list">
-                <div id="library-hint">Click <strong>Open Folder</strong> and select your<br>miratope <code>lib/4D</code> folder</div>
+                <div id="library-hint">Loading library…</div>
             </div>
         </div>
 
@@ -121,17 +235,117 @@
             </div>
         </div>
 
-        <!-- Stats panel with scoreboard -->
+        <!-- Stats panel (exploration mode) -->
         <div id="stats-panel">
             <div id="object-stats">Vertices: 0 | Edges: 0 | Faces: 0 | Cells: 0</div>
             <div id="cross-stats">Cross: V:0 E:0 F:0</div>
-            <div style="margin:5px 0;border-bottom:1px solid #444"></div>
-            <div class="team-row"><span class="cyan">Cyan:</span><span id="cyan-score">V:0 E:0 F:0 C:0</span></div>
-            <div class="team-row"><span class="magenta">Magenta:</span><span id="magenta-score">V:0 E:0 F:0 C:0</span></div>
-            <div class="team-row"><span class="lime">Lime:</span><span id="lime-score">V:0 E:0 F:0 C:0</span></div>
         </div>
 
-        <div id="instructions">Left-click: Color cross-section vertices<br>Right-click + drag: Rotate camera<br>Mouse wheel: Zoom<br>W-slider: 4D cross-section plane</div>
+        <!-- Game score panel (visible during game) -->
+        <div id="game-panel">
+            <div id="game-panel-head">Score</div>
+            <div id="game-scores"></div>
+            <div id="game-log"></div>
+            <div id="game-actions">
+                <button id="end-turn-btn">End Turn →</button>
+                <button id="quit-btn">✕ Quit Game</button>
+            </div>
+        </div>
+
+        <!-- Vote / W-choice panel -->
+        <div id="action-panel">
+            <div id="action-panel-head">
+                <span id="action-panel-title">Vote</span>
+                <span id="action-panel-sub"></span>
+            </div>
+            <div id="plane-grid"></div>
+            <div id="vote-status-bar"></div>
+        </div>
+
+        <!-- Settings modal -->
+        <div id="settings-overlay">
+            <div id="settings-box">
+                <div id="settings-head">
+                    <span>⚙ Game Settings</span>
+                    <button id="settings-close">×</button>
+                </div>
+                <div class="s-section">
+                    <div class="s-label">Teams</div>
+                    <div class="s-opts" id="opt-teams">
+                        <button class="opt-btn sel" data-val="2">2</button>
+                        <button class="opt-btn" data-val="3">3</button>
+                        <button class="opt-btn" data-val="4">4</button>
+                        <button class="opt-btn" data-val="5">5</button>
+                        <button class="opt-btn" data-val="6">6</button>
+                    </div>
+                    <div class="team-swatch-row" id="team-swatches"></div>
+                </div>
+                <div class="s-section">
+                    <div class="s-label">W-Plane Mode</div>
+                    <div class="s-opts" id="opt-wmode">
+                        <button class="opt-btn sel" data-val="oscillate">Oscillate</button>
+                        <button class="opt-btn" data-val="random">Random</button>
+                        <button class="opt-btn" data-val="player-choice">Choice</button>
+                        <button class="opt-btn" data-val="vote">Vote</button>
+                    </div>
+                    <div class="s-desc" id="wmode-desc">W advances +1 plane each round</div>
+                </div>
+                <div class="s-section">
+                    <div class="s-label">Ownership</div>
+                    <div class="s-opts" id="opt-owner">
+                        <button class="opt-btn sel" data-val="permanent">Permanent</button>
+                        <button class="opt-btn" data-val="contestable">Contestable</button>
+                    </div>
+                    <div class="s-desc" id="owner-desc">First claim is final — no reclaiming</div>
+                </div>
+                <div class="s-section">
+                    <div class="s-label">Scoring</div>
+                    <div class="s-opts" id="opt-scoring">
+                        <button class="opt-btn sel" data-val="exponential">Exponential</button>
+                        <button class="opt-btn" data-val="flat">Flat</button>
+                        <button class="opt-btn" data-val="cells">Cells Only</button>
+                    </div>
+                    <div class="s-score-viz">
+                        <div class="s-bar" id="bar-v" style="background:#6a9fd8;height:4px;width:18px" title="V">V</div>
+                        <div class="s-bar" id="bar-e" style="background:#7a9a8a;height:10px;width:18px" title="E">E</div>
+                        <div class="s-bar" id="bar-f" style="background:#c87878;height:18px;width:18px" title="F">F</div>
+                        <div class="s-bar" id="bar-c" style="background:#b860ff;height:24px;width:18px" title="C">C</div>
+                        <span id="score-formula" style="font-size:10px;color:#666;margin-left:6px;align-self:center">V·1 + E·3 + F·9 + C·27</span>
+                    </div>
+                </div>
+                <div class="s-section">
+                    <div class="s-label">Victory</div>
+                    <div class="s-opts" id="opt-victory">
+                        <button class="opt-btn sel" data-val="last-plane">Last Plane</button>
+                        <button class="opt-btn" data-val="first-cell">First Cell</button>
+                    </div>
+                    <div class="s-desc" id="victory-desc">Game ends after all W-planes visited. Most score wins.</div>
+                </div>
+                <div class="s-section" style="border:none">
+                    <div class="s-label">Claims per Turn</div>
+                    <div class="s-opts" id="opt-claims">
+                        <button class="opt-btn sel" data-val="1">1</button>
+                        <button class="opt-btn" data-val="2">2</button>
+                        <button class="opt-btn" data-val="3">3</button>
+                    </div>
+                    <div class="s-desc">Intersection dots claimable per player turn</div>
+                </div>
+                <button id="start-game-btn">▶ Start Game</button>
+            </div>
+        </div>
+
+        <!-- Win screen -->
+        <div id="win-screen">
+            <div id="win-box">
+                <div id="win-title"></div>
+                <div id="win-sub"></div>
+                <div id="win-scores-list"></div>
+                <button class="win-btn" id="play-again-btn">▶ Play Again</button>
+                <button class="win-btn" id="new-settings-btn">⚙ Change Settings</button>
+            </div>
+        </div>
+
+        <div id="instructions">Left-click: Claim · Right-drag: Rotate · Wheel: Zoom</div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -147,6 +361,15 @@
                 this.teamNames = ['cyan', 'magenta', 'lime'];
                 this.teamScores = {cyan: {v:0,e:0,f:0,c:0}, magenta: {v:0,e:0,f:0,c:0}, lime: {v:0,e:0,f:0,c:0}};
                 this.colorIdx = 0;
+                // Game hooks — set externally
+                this.gameClickHandler = null; // ({type,inter}|{type,a,b}) => void
+                this.wLocked = false;
+                // Selection state
+                this.selectedInter = null;    // first-clicked dot (anchor)
+                this.hoveredCandidate = null; // {type:'cross',a,b} | {type:'4d',...} | null
+                this.selectionColor = 0xffffff; // set externally to active team color
+                this.highlightPointGeom = null;
+                this.highlightLineGeom = null; // covers highlight + dim option lines
                 this.w = 0;
                 this.wMin = -1;
                 this.wMax = 1;
@@ -237,6 +460,7 @@
                 };
 
                 slider.oninput = e => {
+                    if(this.wLocked) { e.target.value = this.w.toFixed(6); return; }
                     const newW = +e.target.value;
                     const currentTime = Date.now();
                     
@@ -283,6 +507,11 @@
                         this.camRot.y = Math.max(-80, Math.min(80, this.camRot.y + dy * 0.2));
                         this.mouse = {x:e.clientX, y:e.clientY};
                         this.updateCam();
+                        return;
+                    }
+                    if(this.crossVertGeom && this.selectedInter) {
+                        this.updateHoveredCandidate(e.clientX, e.clientY);
+                        this.updateHighlight();
                     }
                 };
                 canvas.onmouseup = e => e.button === 2 && (this.rotating = false);
@@ -292,28 +521,41 @@
                     this.updateCam();
                 };
                 canvas.onclick = e => {
-                    if(e.button === 0 && !this.rotating && this.crossVertGeom) {
-                        const m = new THREE.Vector2((e.clientX/innerWidth)*2-1, -(e.clientY/innerHeight)*2+1);
-                        this.raycaster.setFromCamera(m, this.camera);
-                        const crossPoints = this.vGroup.children.find(child => child.geometry === this.crossVertGeom);
-                        if(crossPoints) {
-                            const hits = this.raycaster.intersectObject(crossPoints);
-                            if(hits.length) {
-                                const hitIdx = hits[0].index;
-                                const activeInters = this.getActiveIntersections();
-                                if(hitIdx < activeInters.length) {
-                                    const inter = activeInters[hitIdx];
-                                    const team = this.teamNames[this.colorIdx];
-                                    const color = this.palette[this.colorIdx];
-                                    
-                                    this.colors.set(inter.edge[0], color);
-                                    this.colors.set(inter.edge[1], color);
-                                    this.colorIdx = (this.colorIdx + 1) % this.palette.length;
-                                    this.updateScoreboard();
-                                    this.updatePositions();
-                                }
+                    if(e.button !== 0 || this.rotating || !this.crossVertGeom) return;
+                    if(!this.selectedInter) {
+                        // Step 1: select nearest dot
+                        const dot = this.getNearestDot(e.clientX, e.clientY);
+                        if(dot) {
+                            this.selectedInter = dot;
+                            // In explore mode, sync color to next team now
+                            if(!this.gameClickHandler) {
+                                const allTeams = typeof TEAMS !== 'undefined' ? TEAMS : this.palette.map(t=>({color:t,css:'#'+t.toString(16).padStart(6,'0'),name:'Team'}));
+                                this.selectionColor = allTeams.slice(0,3)[this.colorIdx % 3].color;
                             }
+                            this.updateHoveredCandidate(e.clientX, e.clientY);
+                            this.updateHighlight();
                         }
+                    } else if(this.hoveredCandidate) {
+                        // Step 2: claim the highlighted edge
+                        const c = this.hoveredCandidate;
+                        if(this.gameClickHandler) {
+                            this.gameClickHandler(c);
+                        } else {
+                            const allTeams = typeof TEAMS !== 'undefined' ? TEAMS : this.palette.map(t=>({color:t,css:'#'+t.toString(16).padStart(6,'0'),name:'Team'}));
+                            const teams = allTeams.slice(0, 3);
+                            const team = teams[this.colorIdx % teams.length];
+                            const verts = c.type === 'cross'
+                                ? [c.a.edge[0], c.a.edge[1], c.b.edge[0], c.b.edge[1]]
+                                : [c.v1Idx, c.v2Idx];
+                            verts.forEach(vi => this.colors.set(vi, team.color));
+                            this.colorIdx = (this.colorIdx + 1) % teams.length;
+                            this.updatePositions();
+                            this._updateExploreHint(teams);
+                        }
+                        this.clearHover();
+                    } else {
+                        // Clicked empty area or re-clicked selected dot with no candidate: deselect
+                        this.clearHover();
                     }
                 };
                 onresize = () => {
@@ -577,24 +819,23 @@
                     }
                 });
 
-                // Pre-compute face intersection patterns
-                this.faces.forEach(face => {
+                // Pre-compute face intersection patterns (store faceIdx for cell polygon building)
+                this.faces.forEach((face, faceIdx) => {
                     const faceEdges = [];
                     for(let i = 0; i < face.length; i++) {
                         const [v1, v2] = [face[i], face[(i+1)%face.length]];
-                        const edgeIdx = this.edgeIntersections.findIndex(e => 
-                            (e.edge[0] === v1 && e.edge[1] === v2) || 
+                        const edgeIdx = this.edgeIntersections.findIndex(e =>
+                            (e.edge[0] === v1 && e.edge[1] === v2) ||
                             (e.edge[0] === v2 && e.edge[1] === v1)
                         );
                         if(edgeIdx !== -1) faceEdges.push(edgeIdx);
                     }
                     if(faceEdges.length > 0) {
-                        this.facePolygons.push({
-                            face: face,
-                            edgeIndices: faceEdges
-                        });
+                        this.facePolygons.push({ faceIdx, face, edgeIndices: faceEdges });
                     }
                 });
+                // Lookup: faceIdx → facePolygon entry
+                this.faceIdxToFp = new Map(this.facePolygons.map(fp => [fp.faceIdx, fp]));
             }
 
             project(v) {
@@ -633,7 +874,12 @@
                 this.eGroup.clear();
                 this.fGroup.clear();
                 this.crossEdgeGeom = null;
+                this.crossFaceGeom = null;
                 this.refEdgeGeom = null;
+                this.completedCellEdgeGeom = null;
+                this.highlightLineGeom = null;
+                this.highlightPointGeom = null;
+                this.clearHover();
 
                 if(!this.verts.length) return;
 
@@ -659,7 +905,16 @@
 
                 const maxVerts = this.edgeIntersections.length;
 
-                // Cross-section vertex geometry - main colored points
+                // White outline rendered FIRST — depthWrite:false so fill always draws on top
+                this.crossVertOutlineGeom = new THREE.BufferGeometry();
+                this.crossVertOutlineGeom.setAttribute('position', new THREE.BufferAttribute(new Float32Array(maxVerts * 3), 3));
+                this.crossVertOutlineGeom.setDrawRange(0, 0);
+                this.vGroup.add(new THREE.Points(this.crossVertOutlineGeom, new THREE.PointsMaterial({
+                    size: 22, color: 0xffffff, sizeAttenuation: false,
+                    transparent: true, opacity: 1.0, map: circleTexture, alphaTest: 0.1, depthWrite: false
+                })));
+
+                // Colored fill rendered SECOND — always appears on top of the outline ring
                 this.crossVertGeom = new THREE.BufferGeometry();
                 this.crossVertGeom.setAttribute('position', new THREE.BufferAttribute(new Float32Array(maxVerts * 3), 3));
                 this.crossVertGeom.setAttribute('color', new THREE.BufferAttribute(new Float32Array(maxVerts * 3), 3));
@@ -667,15 +922,6 @@
                 this.vGroup.add(new THREE.Points(this.crossVertGeom, new THREE.PointsMaterial({
                     size: 16, vertexColors: true, sizeAttenuation: false,
                     map: circleTexture, alphaTest: 0.1, transparent: true
-                })));
-
-                // Cross-section vertex outline geometry - white outlines
-                this.crossVertOutlineGeom = new THREE.BufferGeometry();
-                this.crossVertOutlineGeom.setAttribute('position', new THREE.BufferAttribute(new Float32Array(maxVerts * 3), 3));
-                this.crossVertOutlineGeom.setDrawRange(0, 0);
-                this.vGroup.add(new THREE.Points(this.crossVertOutlineGeom, new THREE.PointsMaterial({
-                    size: 22, color: 0xffffff, sizeAttenuation: false,
-                    transparent: true, opacity: 1.0, map: circleTexture, alphaTest: 0.1
                 })));
 
                 // Single LineSegments for all cross-section edges (2 verts per segment)
@@ -686,6 +932,34 @@
                 this.crossEdgeGeom.setAttribute('color', new THREE.BufferAttribute(new Float32Array(maxSegs * 6), 3));
                 this.crossEdgeGeom.setDrawRange(0, 0);
                 this.eGroup.add(new THREE.LineSegments(this.crossEdgeGeom, new THREE.LineBasicMaterial({vertexColors: true, linewidth: 2})));
+
+                // Highlight lines: up to 32 segments (dim options + bright chosen)
+                this.highlightLineGeom = new THREE.BufferGeometry();
+                this.highlightLineGeom.setAttribute('position', new THREE.BufferAttribute(new Float32Array(32 * 6), 3));
+                this.highlightLineGeom.setAttribute('color', new THREE.BufferAttribute(new Float32Array(32 * 6), 3));
+                this.highlightLineGeom.setDrawRange(0, 0);
+                this.eGroup.add(new THREE.LineSegments(this.highlightLineGeom, new THREE.LineBasicMaterial({vertexColors: true, linewidth: 3, depthTest: false})));
+
+                // Highlight points: up to 3 (selected + candidate endpoints)
+                this.highlightPointGeom = new THREE.BufferGeometry();
+                this.highlightPointGeom.setAttribute('position', new THREE.BufferAttribute(new Float32Array(3 * 3), 3));
+                this.highlightPointGeom.setAttribute('color', new THREE.BufferAttribute(new Float32Array(3 * 3), 3));
+                this.highlightPointGeom.setDrawRange(0, 0);
+                this.vGroup.add(new THREE.Points(this.highlightPointGeom, new THREE.PointsMaterial({
+                    size: 16, vertexColors: true, sizeAttenuation: false,
+                    map: circleTexture, alphaTest: 0.1, transparent: true, depthTest: false
+                })));
+
+                // Cross-section face fills — triangulated cell cross-sections
+                const maxTris = Math.max(this.cells.length * 24, 128);
+                this.crossFaceGeom = new THREE.BufferGeometry();
+                this.crossFaceGeom.setAttribute('position', new THREE.BufferAttribute(new Float32Array(maxTris * 9), 3));
+                this.crossFaceGeom.setAttribute('color',    new THREE.BufferAttribute(new Float32Array(maxTris * 9), 3));
+                this.crossFaceGeom.setDrawRange(0, 0);
+                this.fGroup.add(new THREE.Mesh(this.crossFaceGeom, new THREE.MeshBasicMaterial({
+                    vertexColors: true, transparent: true, opacity: 0.22,
+                    side: THREE.DoubleSide, depthWrite: false
+                })));
             }
 
             createRefGeometries() {
@@ -700,17 +974,200 @@
                 this.refEdgeGeom.setAttribute('position', new THREE.BufferAttribute(new Float32Array(this.edges.length * 6), 3));
                 this.refEdgeGeom.setAttribute('color', new THREE.BufferAttribute(new Float32Array(this.edges.length * 6), 3));
                 this.eGroup.add(new THREE.LineSegments(this.refEdgeGeom, new THREE.LineBasicMaterial({vertexColors:true, transparent:true, opacity:0.3})));
+
+                // Completed-cell highlight edges (full 4D wireframe at high opacity)
+                const maxCellEdgeSegs = this.cells.reduce((s, cell) =>
+                    s + cell.reduce((fs, fi) => fs + (this.faces[fi] ? this.faces[fi].length : 0), 0), 0);
+                this.completedCellEdgeGeom = new THREE.BufferGeometry();
+                this.completedCellEdgeGeom.setAttribute('position', new THREE.BufferAttribute(new Float32Array(Math.max(maxCellEdgeSegs, 1) * 6), 3));
+                this.completedCellEdgeGeom.setAttribute('color',    new THREE.BufferAttribute(new Float32Array(Math.max(maxCellEdgeSegs, 1) * 6), 3));
+                this.completedCellEdgeGeom.setDrawRange(0, 0);
+                this.eGroup.add(new THREE.LineSegments(this.completedCellEdgeGeom, new THREE.LineBasicMaterial({vertexColors:true, transparent:true, opacity:0.85})));
             }
 
             getActiveIntersections() {
                 const activeInters = [];
-                this.edgeIntersections.forEach(inter => {
+                this.edgeIntersections.forEach((inter, idx) => {
                     if(this.crosses(inter.v1, inter.v2)) {
                         const lerpVert = this.lerp(inter.v1, inter.v2);
-                        activeInters.push({...inter, ...lerpVert});
+                        activeInters.push({...inter, ...lerpVert, interIdx: idx});
                     }
                 });
                 return activeInters;
+            }
+
+            _screenPos(inter) {
+                const p = this.project(inter);
+                const v = new THREE.Vector3(p.x, p.y, p.z).project(this.camera);
+                return [(v.x * 0.5 + 0.5) * innerWidth, (-v.y * 0.5 + 0.5) * innerHeight];
+            }
+
+            _distToRay(mx, my, ox, oy, tx, ty) {
+                // Distance from (mx,my) to ray from (ox,oy) through (tx,ty), t>=0
+                const dx = tx-ox, dy = ty-oy, len = Math.hypot(dx, dy);
+                if(len < 0.001) return Math.hypot(mx-ox, my-oy);
+                const ux = dx/len, uy = dy/len;
+                const t = Math.max(0, (mx-ox)*ux + (my-oy)*uy);
+                return Math.hypot(mx-(ox+t*ux), my-(oy+t*uy));
+            }
+
+            getNearestDot(mouseX, mouseY) {
+                // Screen-space nearest dot — reliable, no raycaster
+                const activeInters = this.getActiveIntersections();
+                let best = null, bestDist = 36; // px threshold for dot selection
+                activeInters.forEach(inter => {
+                    const [sx, sy] = this._screenPos(inter);
+                    const dist = Math.hypot(mouseX - sx, mouseY - sy);
+                    if(dist < bestDist) { bestDist = dist; best = inter; }
+                });
+                return best;
+            }
+
+            getAdjacentDots(selectedInterIdx) {
+                // All dots connected to selectedInterIdx by a cross-section edge on current plane
+                const activeInters = this.getActiveIntersections();
+                const adjSet = new Set();
+                this.facePolygons.forEach(fp => {
+                    const active = fp.edgeIndices.filter(ei =>
+                        this.crosses(this.edgeIntersections[ei].v1, this.edgeIntersections[ei].v2)
+                    );
+                    if(active.length < 2) return;
+                    const pos = active.indexOf(selectedInterIdx);
+                    if(pos === -1) return;
+                    adjSet.add(active[(pos + active.length - 1) % active.length]);
+                    adjSet.add(active[(pos + 1) % active.length]);
+                });
+                adjSet.delete(selectedInterIdx);
+                return [...adjSet].map(idx => activeInters.find(i => i.interIdx === idx)).filter(Boolean);
+            }
+
+            get4DPaths(inter) {
+                // 4D edges from inter's endpoint vertices, filtered to only those
+                // converging toward the current w-slice (not going further away).
+                // From vi below the slice (vi.w < W): only edges where other.w > vi.w
+                // From vi above the slice (vi.w > W): only edges where other.w < vi.w
+                const paths = [];
+                const seen = new Set();
+                const W = this.w;
+                [inter.edge[0], inter.edge[1]].forEach(vi => {
+                    const viW = this.verts[vi].w;
+                    this.edges.forEach(([a, b]) => {
+                        if(a !== vi && b !== vi) return;
+                        const other = a === vi ? b : a;
+                        const otherW = this.verts[other].w;
+                        // Only keep edges moving toward the slice, not away from it
+                        const converging = viW < W ? otherW > viW : otherW < viW;
+                        if(!converging) return;
+                        const key = [Math.min(vi, other), Math.max(vi, other)].join(',');
+                        if(seen.has(key)) return;
+                        seen.add(key);
+                        const tv = this.verts[other];
+                        const [tx, ty] = this._screenPos(tv);
+                        paths.push({v1Idx: vi, v2Idx: other, tx, ty});
+                    });
+                });
+                return paths;
+            }
+
+            updateHoveredCandidate(mouseX, mouseY) {
+                if(!this.selectedInter) { this.hoveredCandidate = null; return; }
+                const [sx, sy] = this._screenPos(this.selectedInter);
+
+                // Collect all candidate edges: cross-section (to visible dots) + 4D (to ref vertices)
+                const adjDots = this.getAdjacentDots(this.selectedInter.interIdx);
+                const paths4D = this.get4DPaths(this.selectedInter);
+
+                const MAX_RAY_DIST = 70; // px — beyond this the cursor is "empty space"
+                let best = null, bestDist = MAX_RAY_DIST;
+
+                // Cross-section edges: ray from selected dot toward adjacent dot
+                adjDots.forEach(adj => {
+                    const [ax, ay] = this._screenPos(adj);
+                    const dist = this._distToRay(mouseX, mouseY, sx, sy, ax, ay);
+                    if(dist < bestDist) { bestDist = dist; best = {type:'cross', a:this.selectedInter, b:adj}; }
+                });
+
+                // 4D edges: ray from selected dot toward projected reference vertex
+                paths4D.forEach(path => {
+                    const dist = this._distToRay(mouseX, mouseY, sx, sy, path.tx, path.ty);
+                    if(dist < bestDist) { bestDist = dist; best = {type:'4d', v1Idx:path.v1Idx, v2Idx:path.v2Idx, inter:this.selectedInter}; }
+                });
+
+                this.hoveredCandidate = best; // null when cursor is far from all paths
+            }
+
+            updateHighlight() {
+                if(!this.highlightLineGeom || !this.highlightPointGeom) return;
+                const hPos = this.highlightPointGeom.attributes.position.array;
+                const hCol = this.highlightPointGeom.attributes.color.array;
+                const lPos = this.highlightLineGeom.attributes.position.array;
+                const lCol = this.highlightLineGeom.attributes.color.array;
+                let hCount = 0, lVerts = 0;
+
+                const selC = new THREE.Color(this.selectionColor);
+                const dimC = new THREE.Color(selC).multiplyScalar(0.35);
+
+                if(this.selectedInter) {
+                    // Team color fill on top → selected dot looks like a claimed dot
+                    const ps = this.project(this.selectedInter);
+                    hPos[0]=ps.x; hPos[1]=ps.y; hPos[2]=ps.z;
+                    hCol[0]=selC.r; hCol[1]=selC.g; hCol[2]=selC.b;
+                    hCount = 1;
+
+                    const adjDots  = this.getAdjacentDots(this.selectedInter.interIdx);
+                    const paths4D  = this.get4DPaths(this.selectedInter);
+                    const hov      = this.hoveredCandidate;
+                    const chosenB  = hov?.type === 'cross' ? hov.b : null;
+                    const chosen4D = hov?.type === '4d' ? `${hov.v1Idx},${hov.v2Idx}` : null;
+
+                    // Cross-section edges
+                    adjDots.forEach(adj => {
+                        const isChosen = chosenB && adj.interIdx === chosenB.interIdx;
+                        const c = isChosen ? selC : dimC;
+                        const pa = this.project(this.selectedInter), pb = this.project(adj);
+                        const b = lVerts * 3;
+                        lPos[b]  =pa.x; lPos[b+1]=pa.y; lPos[b+2]=pa.z;
+                        lPos[b+3]=pb.x; lPos[b+4]=pb.y; lPos[b+5]=pb.z;
+                        lCol[b]  =c.r;  lCol[b+1]=c.g;  lCol[b+2]=c.b;
+                        lCol[b+3]=c.r;  lCol[b+4]=c.g;  lCol[b+5]=c.b;
+                        lVerts += 2;
+                        if(isChosen && hCount < 3) {
+                            hPos[hCount*3]=pb.x; hPos[hCount*3+1]=pb.y; hPos[hCount*3+2]=pb.z;
+                            hCol[hCount*3]=selC.r; hCol[hCount*3+1]=selC.g; hCol[hCount*3+2]=selC.b;
+                            hCount++;
+                        }
+                    });
+
+                    // 4D path stubs — short lines from selected dot toward reference vertex
+                    paths4D.forEach(path => {
+                        const key = `${path.v1Idx},${path.v2Idx}`;
+                        const isChosen = chosen4D === key;
+                        const c = isChosen ? selC : dimC;
+                        const refV = this.verts[path.v2Idx];
+                        const p0 = this.project(this.selectedInter);
+                        const p1 = this.project(refV);
+                        const b = lVerts * 3;
+                        if(b + 6 > lPos.length) return;
+                        lPos[b]  =p0.x; lPos[b+1]=p0.y; lPos[b+2]=p0.z;
+                        lPos[b+3]=p1.x; lPos[b+4]=p1.y; lPos[b+5]=p1.z;
+                        lCol[b]  =c.r;  lCol[b+1]=c.g;  lCol[b+2]=c.b;
+                        lCol[b+3]=c.r;  lCol[b+4]=c.g;  lCol[b+5]=c.b;
+                        lVerts += 2;
+                    });
+                }
+
+                this.highlightPointGeom.attributes.position.needsUpdate = true;
+                this.highlightPointGeom.attributes.color.needsUpdate = true;
+                this.highlightPointGeom.setDrawRange(0, hCount);
+                this.highlightLineGeom.attributes.position.needsUpdate = true;
+                this.highlightLineGeom.attributes.color.needsUpdate = true;
+                this.highlightLineGeom.setDrawRange(0, lVerts);
+            }
+
+            clearHover() {
+                this.selectedInter = null;
+                this.hoveredCandidate = null;
+                this.updateHighlight();
             }
 
             updatePositions() {
@@ -719,8 +1176,8 @@
                 const activeInters = this.getActiveIntersections();
 
                 // Cross-section vertices
-                const pos = this.crossVertGeom.attributes.position.array;
-                const col = this.crossVertGeom.attributes.color.array;
+                const pos    = this.crossVertGeom.attributes.position.array;
+                const col    = this.crossVertGeom.attributes.color.array;
                 const outPos = this.crossVertOutlineGeom.attributes.position.array;
                 activeInters.forEach((inter, i) => {
                     const p = this.project(inter);
@@ -766,6 +1223,97 @@
                 this.crossEdgeGeom.attributes.color.needsUpdate = true;
                 this.crossEdgeGeom.setDrawRange(0, segVerts);
 
+                // ── Cell cross-section fills ──
+                // Always update needsUpdate so Three.js re-renders even when draw range drops to 0
+                if(this.crossFaceGeom) {
+                    const fPos = this.crossFaceGeom.attributes.position.array;
+                    const fCol = this.crossFaceGeom.attributes.color.array;
+                    let triVerts = 0;
+
+                    if(this.cells.length && this.faceIdxToFp) {
+                        this.cells.forEach(cellFaceIndices => {
+                            // Collect one line-segment per face (2 active edge-intersection indices)
+                            const segs = [];
+                            cellFaceIndices.forEach(faceIdx => {
+                                const fp = this.faceIdxToFp.get(faceIdx);
+                                if(!fp) return;
+                                const active = fp.edgeIndices.filter(ei =>
+                                    this.crosses(this.edgeIntersections[ei].v1, this.edgeIntersections[ei].v2)
+                                );
+                                if(active.length === 2) segs.push(active);
+                            });
+                            if(segs.length < 3) return;
+
+                            // Chain segments into closed polygon by shared edge-intersection index
+                            const poly = [segs[0][0], segs[0][1]];
+                            const used = new Set([0]);
+                            while(used.size < segs.length) {
+                                const last = poly[poly.length - 1];
+                                let found = false;
+                                for(let i = 0; i < segs.length; i++) {
+                                    if(used.has(i)) continue;
+                                    if(segs[i][0] === last) { poly.push(segs[i][1]); used.add(i); found = true; break; }
+                                    if(segs[i][1] === last) { poly.push(segs[i][0]); used.add(i); found = true; break; }
+                                }
+                                if(!found) break;
+                            }
+                            if(poly[poly.length-1] === poly[0]) poly.pop();
+                            if(poly.length < 3) return;
+
+                            // Relaxed: claimed endpoints must all agree on one team; unclaimed skipped
+                            let teamCol = null;
+                            for(const eiIdx of poly) {
+                                const {edge} = this.edgeIntersections[eiIdx];
+                                const c1 = this.colors.get(edge[0]);
+                                const c2 = this.colors.get(edge[1]);
+                                if(c1 !== undefined && c2 !== undefined && c1 !== c2) return;
+                                const claimed = c1 ?? c2;
+                                if(claimed === undefined) continue;
+                                if(teamCol === null) teamCol = claimed;
+                                else if(teamCol !== claimed) return;
+                            }
+                            if(teamCol === null) return;
+
+                            // Opacity = minimum colorfulness of visual dot colors
+                            // (unclaimed endpoints → white → colorfulness 0 → transparent fill)
+                            let minColorfulness = 1.0;
+                            const pts = poly.map(eiIdx => {
+                                const inter = this.edgeIntersections[eiIdx];
+                                const lv = this.lerp(inter.v1, inter.v2);
+                                const c1 = this.colors.get(inter.edge[0]);
+                                const c2 = this.colors.get(inter.edge[1]);
+                                const dotCol = new THREE.Color().lerpColors(
+                                    new THREE.Color(c1 || 0xFFFFFF),
+                                    new THREE.Color(c2 || 0xFFFFFF),
+                                    lv.t ?? 0.5
+                                );
+                                minColorfulness = Math.min(minColorfulness, 1 - Math.min(dotCol.r, dotCol.g, dotCol.b));
+                                return this.project(lv);
+                            });
+                            if(minColorfulness <= 0) return;
+
+                            const fc = new THREE.Color(teamCol).multiplyScalar(minColorfulness);
+
+                            // Fan triangulation from pts[0]
+                            for(let i = 1; i < pts.length - 1; i++) {
+                                const [a, b, c] = [pts[0], pts[i], pts[i+1]];
+                                const b3 = triVerts * 3;
+                                fPos[b3]   = a.x; fPos[b3+1] = a.y; fPos[b3+2] = a.z;
+                                fPos[b3+3] = b.x; fPos[b3+4] = b.y; fPos[b3+5] = b.z;
+                                fPos[b3+6] = c.x; fPos[b3+7] = c.y; fPos[b3+8] = c.z;
+                                fCol[b3]   = fc.r; fCol[b3+1] = fc.g; fCol[b3+2] = fc.b;
+                                fCol[b3+3] = fc.r; fCol[b3+4] = fc.g; fCol[b3+5] = fc.b;
+                                fCol[b3+6] = fc.r; fCol[b3+7] = fc.g; fCol[b3+8] = fc.b;
+                                triVerts += 3;
+                            }
+                        });
+                    }
+
+                    this.crossFaceGeom.attributes.position.needsUpdate = true;
+                    this.crossFaceGeom.attributes.color.needsUpdate = true;
+                    this.crossFaceGeom.setDrawRange(0, triVerts);
+                }
+
                 this.updateRefPositions();
             }
 
@@ -798,67 +1346,63 @@
                 });
                 this.refEdgeGeom.attributes.position.needsUpdate = true;
                 this.refEdgeGeom.attributes.color.needsUpdate = true;
+
+                // Completed-cell highlight: scan all cells, find fully-owned ones
+                if(this.completedCellEdgeGeom && this.cells.length) {
+                    const cePos = this.completedCellEdgeGeom.attributes.position.array;
+                    const ceCol = this.completedCellEdgeGeom.attributes.color.array;
+                    let ceVerts = 0;
+
+                    this.cells.forEach(cellFaceIndices => {
+                        // Collect all vertex indices referenced by this cell's faces
+                        const cellVerts = new Set();
+                        cellFaceIndices.forEach(fi => { if(this.faces[fi]) this.faces[fi].forEach(vi => cellVerts.add(vi)); });
+
+                        // Check: all vertices claimed by the same team?
+                        let cellTeam = null;
+                        for(const vi of cellVerts) {
+                            const c = this.colors.get(vi);
+                            if(c === undefined) { cellTeam = null; break; }
+                            if(cellTeam === null) cellTeam = c;
+                            else if(cellTeam !== c) { cellTeam = null; break; }
+                        }
+                        if(cellTeam === null) return;
+
+                        const tc = new THREE.Color(cellTeam);
+                        // Draw all face-edges of this completed cell in team color
+                        cellFaceIndices.forEach(fi => {
+                            const face = this.faces[fi];
+                            if(!face) return;
+                            for(let k = 0; k < face.length; k++) {
+                                const p1 = this.project(this.verts[face[k]]);
+                                const p2 = this.project(this.verts[face[(k+1) % face.length]]);
+                                const b = ceVerts * 3;
+                                cePos[b]  =p1.x; cePos[b+1]=p1.y; cePos[b+2]=p1.z;
+                                cePos[b+3]=p2.x; cePos[b+4]=p2.y; cePos[b+5]=p2.z;
+                                ceCol[b]  =tc.r; ceCol[b+1]=tc.g; ceCol[b+2]=tc.b;
+                                ceCol[b+3]=tc.r; ceCol[b+4]=tc.g; ceCol[b+5]=tc.b;
+                                ceVerts += 2;
+                            }
+                        });
+                    });
+
+                    this.completedCellEdgeGeom.attributes.position.needsUpdate = true;
+                    this.completedCellEdgeGeom.attributes.color.needsUpdate = true;
+                    this.completedCellEdgeGeom.setDrawRange(0, ceVerts);
+                }
+
+                this.updateHighlight();
             }
 
-            updateScoreboard(isCritical = false) {
-                // Reset scores
-                this.teamScores = {cyan: {v:0,e:0,f:0,c:0}, magenta: {v:0,e:0,f:0,c:0}, lime: {v:0,e:0,f:0,c:0}};
-                
-                // Count colored vertices
-                this.colors.forEach((color, vertexIdx) => {
-                    const team = color === 0x00FFFF ? 'cyan' : color === 0xFF00FF ? 'magenta' : 'lime';
-                    this.teamScores[team].v++;
-                });
+            updateScoreboard() {
+                // Exploration mode scoring handled by game engine; no-op here.
+            }
 
-                // Count colored edges
-                this.edges.forEach(([v1, v2]) => {
-                    const c1 = this.colors.get(v1);
-                    const c2 = this.colors.get(v2);
-                    if(c1 && c2 && c1 === c2) {
-                        const team = c1 === 0x00FFFF ? 'cyan' : c1 === 0xFF00FF ? 'magenta' : 'lime';
-                        this.teamScores[team].e++;
-                    }
-                });
-
-                // Count colored faces
-                this.faces.forEach(face => {
-                    const faceColors = face.map(v => this.colors.get(v)).filter(c => c);
-                    if(faceColors.length === face.length && faceColors.every(c => c === faceColors[0])) {
-                        const team = faceColors[0] === 0x00FFFF ? 'cyan' : faceColors[0] === 0xFF00FF ? 'magenta' : 'lime';
-                        this.teamScores[team].f++;
-                    }
-                });
-
-                // Count colored cells
-                this.cells.forEach(cell => {
-                    const cellFaceColors = [];
-                    let allSameColor = true;
-                    let cellColor = null;
-                    
-                    cell.forEach(faceIdx => {
-                        const face = this.faces[faceIdx];
-                        const faceColors = face.map(v => this.colors.get(v)).filter(c => c);
-                        if(faceColors.length === face.length && faceColors.every(c => c === faceColors[0])) {
-                            if(cellColor === null) {
-                                cellColor = faceColors[0];
-                            } else if(cellColor !== faceColors[0]) {
-                                allSameColor = false;
-                            }
-                        } else {
-                            allSameColor = false;
-                        }
-                    });
-                    
-                    if(allSameColor && cellColor) {
-                        const team = cellColor === 0x00FFFF ? 'cyan' : cellColor === 0xFF00FF ? 'magenta' : 'lime';
-                        this.teamScores[team].c++;
-                    }
-                });
-
-                // Update scoreboard display
-                document.getElementById('cyan-score').textContent = `V:${this.teamScores.cyan.v} E:${this.teamScores.cyan.e} F:${this.teamScores.cyan.f} C:${this.teamScores.cyan.c}`;
-                document.getElementById('magenta-score').textContent = `V:${this.teamScores.magenta.v} E:${this.teamScores.magenta.e} F:${this.teamScores.magenta.f} C:${this.teamScores.magenta.c}`;
-                document.getElementById('lime-score').textContent = `V:${this.teamScores.lime.v} E:${this.teamScores.lime.e} F:${this.teamScores.lime.f} C:${this.teamScores.lime.c}`;
+            _updateExploreHint(teams) {
+                if(this.gameClickHandler) return; // game mode owns the UI
+                const next = teams[this.colorIdx % teams.length];
+                const el = document.getElementById('instructions');
+                if(el) el.innerHTML = `Left-click: Claim &nbsp;<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${next.css};vertical-align:middle"></span> <b style="color:${next.css}">${next.name}</b> &nbsp;·&nbsp; Right-drag: Rotate &nbsp;·&nbsp; Wheel: Zoom`;
             }
 
             updateColors() {
@@ -879,6 +1423,56 @@
                 document.getElementById('cross-stats').innerHTML = crossText;
             }
 
+            setW(w) {
+                this.w = w;
+                const slider = document.getElementById('w-slider');
+                const val    = document.getElementById('slider-value');
+                slider.value = w.toFixed(6);
+                val.textContent = w.toFixed(2);
+                this.updateSliderMarkers();
+                this.updatePositions();
+                this.updateStats();
+            }
+
+            animateToW(targetW) {
+                this.clearHover();
+                const startW = this.w;
+                const dist = Math.abs(targetW - startW);
+                if(dist < 0.0001) return;
+                // Duration scales with distance so short hops feel snappy, long flights feel grand
+                const duration = Math.min(2800, 560 + dist * 1040);
+                const startTime = performance.now();
+                const slider = document.getElementById('w-slider');
+                const val    = document.getElementById('slider-value');
+                const tick = (now) => {
+                    const p = Math.min((now - startTime) / duration, 1);
+                    // Ease-out quart: fast start, smooth landing, never feels mechanical
+                    const t = 1 - Math.pow(1 - p, 4);
+                    this.w = startW + (targetW - startW) * t;
+                    slider.value = this.w.toFixed(6);
+                    val.textContent = this.w.toFixed(2);
+                    this.updateSliderMarkers();
+                    this.updatePositions();
+                    this.updateStats();
+                    if(p < 1) requestAnimationFrame(tick);
+                    else { this.w = targetW; slider.value = targetW.toFixed(6); val.textContent = targetW.toFixed(2); this.updateSliderMarkers(); this.updatePositions(); }
+                };
+                requestAnimationFrame(tick);
+            }
+
+            syncColors(ownership, teams) {
+                // ownership = {vertexIdx: teamIdx}, teams = TEAMS array
+                this.colors.clear();
+                Object.entries(ownership).forEach(([vi, ti]) => {
+                    this.colors.set(Number(vi), teams[ti].color);
+                });
+                this.updatePositions();
+            }
+
+            getPolytopeData() {
+                return { verts:this.verts, edges:this.edges, faces:this.faces, cells:this.cells, wPlanes:this.criticalW||[] };
+            }
+
             updateCam() {
                 const rx = this.camRot.x * Math.PI/180;
                 const ry = this.camRot.y * Math.PI/180;
@@ -894,6 +1488,616 @@
         }
 
         const viewer = new FourDViewer();
+
+        // ═══════════════════════════════════════════════════
+        //  GAME ENGINE
+        // ═══════════════════════════════════════════════════
+
+        const TEAMS = [
+            { name:'Cyan',    color:0x00FFFF, css:'#00FFFF' },
+            { name:'Magenta', color:0xFF00CC, css:'#FF00CC' },
+            { name:'Lime',    color:0x00FF44, css:'#00FF44' },
+            { name:'Orange',  color:0xFF6600, css:'#FF6600' },
+            { name:'Gold',    color:0xFFCC00, css:'#FFCC00' },
+            { name:'Violet',  color:0x9933FF, css:'#9933FF' },
+        ];
+
+        const SCORING_PRESETS = {
+            exponential: { weights:[1,3,9,27], formula:'V·1 + E·3 + F·9 + C·27' },
+            flat:        { weights:[1,1,1,1],  formula:'V·1 + E·1 + F·1 + C·1'  },
+            cells:       { weights:[0,0,0,1],  formula:'C·1 (cells only)'        },
+        };
+
+        const WMODE_DESC = {
+            'oscillate':    'W bounces back and forth across planes',
+            'random':       'W jumps to a random plane each round (pre-seeded)',
+            'player-choice':'Active player picks which W-plane to visit',
+            'vote':         'All players secretly vote — majority decides (ties: random)',
+        };
+        const OWNER_DESC = {
+            'permanent':   'First claim is final — no reclaiming',
+            'contestable': 'Enemy vertices can be contested and captured next turn',
+        };
+        const VICTORY_DESC = {
+            'last-plane': 'Game ends after all W-planes visited. Most score wins.',
+            'first-cell': 'First player to complete a full 3-cell wins instantly.',
+        };
+
+        // ── Seeded PRNG (LCG) ──
+        function makePRNG(seed) {
+            let s = seed >>> 0;
+            return () => { s = (Math.imul(s, 1664525) + 1013904223) >>> 0; return s / 0xFFFFFFFF; };
+        }
+
+        // ── Game state ──
+        let GS = null; // active game state
+
+        function buildInitialState(rules, wPlanes, seed) {
+            const rng = makePRNG(seed);
+            // pre-generate shuffled sequence for random mode
+            const seq = wPlanes.map((_,i)=>i);
+            for(let i=seq.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[seq[i],seq[j]]=[seq[j],seq[i]];}
+            return {
+                rules,
+                seed,
+                wPlanes,
+                turn: 0,           // total turns taken
+                round: 0,          // completed rounds (all teams went once)
+                planeIdx: 0,
+                wDirection: 1,
+                activeTeam: 0,
+                phase: 'claim',    // claim | choose-w | vote | resolution | ended
+                votes: {},         // teamIdx → planeIdx
+                votesIn: 0,
+                ownership: {},     // vertexIdx → teamIdx
+                contested: {},     // vertexIdx → challengerTeamIdx
+                claimsThisTurn: 0,
+                score: {},
+                winner: null,
+                seqPos: 0,
+                randomSeq: seq,
+                visitedPlanes: {0: true}, // planeIdx → true
+                log: [],
+            };
+        }
+
+        // ── Pure scoring ──
+        function computeScore(state, poly) {
+            const sc = {};
+            for(let t=0;t<state.rules.teamCount;t++) sc[t]={v:0,e:0,f:0,c:0,total:0};
+            const own = state.ownership;
+            const [wV,wE,wF,wC] = state.rules.scoring;
+
+            Object.entries(own).forEach(([vi,ti])=>{ if(sc[ti]) sc[ti].v++; });
+
+            poly.edges.forEach(([a,b])=>{
+                if(own[a]!==undefined && own[a]===own[b]) sc[own[a]].e++;
+            });
+
+            poly.faces.forEach(face=>{
+                const t=own[face[0]];
+                if(t!==undefined && face.every(vi=>own[vi]===t)) sc[t].f++;
+            });
+
+            poly.cells.forEach(cell=>{
+                const verts=[...new Set(cell.flatMap(fi=>poly.faces[fi]))];
+                if(!verts.length) return;
+                const t=own[verts[0]];
+                if(t!==undefined && verts.every(vi=>own[vi]===t)) sc[t].c++;
+            });
+
+            for(let t=0;t<state.rules.teamCount;t++){
+                const s=sc[t];
+                s.total = s.v*wV + s.e*wE + s.f*wF + s.c*wC;
+            }
+            return sc;
+        }
+
+        // ── Check victory ──
+        function checkVictory(state, poly) {
+            const sc = state.score;
+            if(state.rules.victory === 'first-cell') {
+                for(let t=0;t<state.rules.teamCount;t++){
+                    if(sc[t] && sc[t].c > 0) return t;
+                }
+            }
+            if(state.rules.victory === 'last-plane') {
+                // Game ends when all W-planes have been visited at least once
+                if(Object.keys(state.visitedPlanes).length >= state.wPlanes.length) {
+                    let best=-1, bestScore=-1;
+                    for(let t=0;t<state.rules.teamCount;t++){
+                        const s=sc[t]?sc[t].total:0;
+                        if(s>bestScore){bestScore=s;best=t;}
+                    }
+                    return best;
+                }
+            }
+            return null;
+        }
+
+        // ── Next W-plane index ──
+        function nextPlaneIdx(state, playerChoice) {
+            const n = state.wPlanes.length;
+            switch(state.rules.wMode) {
+                case 'oscillate': {
+                    let nx = state.planeIdx + state.wDirection;
+                    if(nx >= n || nx < 0) nx = state.planeIdx - state.wDirection;
+                    return Math.max(0, Math.min(n-1, nx));
+                }
+                case 'random':   return state.randomSeq[state.seqPos % state.randomSeq.length];
+                case 'player-choice': return playerChoice;
+                case 'vote':     return resolveVotes(state);
+            }
+            return 0;
+        }
+
+        function nextDirection(state, nextIdx) {
+            if(state.rules.wMode !== 'oscillate') return state.wDirection;
+            const n = state.wPlanes.length;
+            let dir = state.wDirection;
+            if(nextIdx + dir >= n || nextIdx + dir < 0) dir = -dir;
+            return dir;
+        }
+
+        function resolveVotes(state) {
+            const tally = {};
+            Object.values(state.votes).forEach(v=>{ tally[v]=(tally[v]||0)+1; });
+            if(!Object.keys(tally).length) return state.planeIdx;
+            const max = Math.max(...Object.values(tally));
+            const winners = Object.keys(tally).filter(k=>tally[k]===max).map(Number);
+            // deterministic tiebreak via seed
+            const rng = makePRNG(state.seed + state.turn);
+            return winners[Math.floor(rng() * winners.length)];
+        }
+
+        // ── Check if a W-plane has any claimable spots in permanent mode ──
+        function hasAvailableSpots(wValue, state, poly) {
+            return poly.edges.some(([a, b]) => {
+                const va = poly.verts[a], vb = poly.verts[b];
+                const crosses = (va.w <= wValue && vb.w >= wValue) || (vb.w <= wValue && va.w >= wValue);
+                if(!crosses) return false;
+                return state.ownership[a] === undefined || state.ownership[b] === undefined;
+            });
+        }
+
+        // ── Apply a claim action ──
+        function applyClaim(state, v1Idx, v2Idx, v3Idx, v4Idx, poly) {
+            if(state.phase !== 'claim') return state;
+            if(state.claimsThisTurn >= state.rules.claimsPerTurn) return state;
+
+            const newOwn = {...state.ownership};
+            const newCon = {...state.contested};
+            const team   = state.activeTeam;
+            const verts  = v3Idx !== null ? [v1Idx, v2Idx, v3Idx, v4Idx] : [v1Idx, v2Idx];
+
+            verts.forEach(vi => {
+                const cur = newOwn[vi];
+                if(state.rules.ownerMode === 'permanent') {
+                    if(cur === undefined) newOwn[vi] = team;
+                } else {
+                    if(cur === undefined)   newOwn[vi] = team;
+                    else if(cur !== team)   newCon[vi] = team;
+                }
+            });
+
+            const newState = {...state, ownership:newOwn, contested:newCon, claimsThisTurn:state.claimsThisTurn+1};
+            newState.score = computeScore(newState, poly);
+            return newState;
+        }
+
+        // ── End turn ──
+        function applyEndTurn(state, poly) {
+            let s = {...state};
+
+            // Resolve contests (contestable mode)
+            if(s.rules.ownerMode === 'contestable' && Object.keys(s.contested).length) {
+                const newOwn = {...s.ownership};
+                Object.entries(s.contested).forEach(([vi,ch])=>{ newOwn[Number(vi)]=ch; });
+                s = {...s, ownership:newOwn, contested:{}};
+            }
+
+            s.score = computeScore(s, poly);
+            const winner = checkVictory(s, poly);
+            if(winner !== null) return {...s, phase:'ended', winner, log:[...s.log,`Game over!`]};
+
+            // Advance team
+            let nextTeam = (s.activeTeam + 1) % s.rules.teamCount;
+            let newRound = nextTeam === 0 ? s.round + 1 : s.round;
+            let newPlaneIdx = s.planeIdx;
+            let newSeqPos = s.seqPos;
+            let newDir = s.wDirection;
+            let newPhase = 'claim';
+            let newVotes = {};
+            let newVotesIn = 0;
+
+            // W-plane advances every player turn
+            if(s.rules.wMode === 'player-choice') {
+                newPhase = 'choose-w';
+            } else if(s.rules.wMode === 'vote') {
+                newPhase = 'vote';
+            } else {
+                newPlaneIdx = nextPlaneIdx(s, null);
+                newDir = nextDirection({...s, planeIdx:newPlaneIdx}, newPlaneIdx);
+                if(s.rules.wMode === 'random') newSeqPos = s.seqPos + 1;
+            }
+
+            // Permanent mode: skip planes with no unclaimed spots
+            if(s.rules.ownerMode === 'permanent' && newPhase === 'claim') {
+                let skipped = 0;
+                let checkIdx = newPlaneIdx;
+                while(skipped < s.wPlanes.length && !hasAvailableSpots(s.wPlanes[checkIdx], s, poly)) {
+                    skipped++;
+                    checkIdx = (checkIdx + 1) % s.wPlanes.length;
+                }
+                if(skipped >= s.wPlanes.length) {
+                    // Every plane is full → end game now
+                    const sc = computeScore(s, poly);
+                    let best=-1, bestTot=-1;
+                    for(let t=0;t<s.rules.teamCount;t++){const tot=sc[t]?sc[t].total:0;if(tot>bestTot){bestTot=tot;best=t;}}
+                    return {...s, score:sc, phase:'ended', winner:best, log:[...s.log.slice(-20),'All spots claimed — game over!']};
+                }
+                newPlaneIdx = checkIdx;
+                newDir = nextDirection({...s, planeIdx:newPlaneIdx}, newPlaneIdx);
+            }
+
+            // Track visited planes
+            const newVisited = {...s.visitedPlanes, [newPlaneIdx]: true};
+
+            const entry = `T${s.turn+1}: ${TEAMS[s.activeTeam].name} claimed ${s.claimsThisTurn}`;
+            return {
+                ...s,
+                turn: s.turn+1,
+                round: newRound,
+                planeIdx: newPlaneIdx,
+                wDirection: newDir,
+                activeTeam: nextTeam,
+                phase: newPhase,
+                votes: newVotes,
+                votesIn: newVotesIn,
+                claimsThisTurn: 0,
+                seqPos: newSeqPos,
+                score: s.score,
+                visitedPlanes: newVisited,
+                log: [...s.log.slice(-20), entry],
+            };
+        }
+
+        // ── Apply W choice (player-choice or vote result) ──
+        function applyWChoice(state, planeIdx) {
+            return {...state, planeIdx, phase:'claim'};
+        }
+
+        function applyVote(state, teamIdx, planeIdx) {
+            if(state.phase !== 'vote') return state;
+            const newVotes = {...state.votes, [teamIdx]: planeIdx};
+            const votesIn  = Object.keys(newVotes).length;
+            if(votesIn >= state.rules.teamCount) {
+                const resolved = resolveVotes({...state, votes:newVotes});
+                return {...state, votes:newVotes, votesIn, planeIdx:resolved, phase:'claim'};
+            }
+            return {...state, votes:newVotes, votesIn};
+        }
+
+        // ═══════════════════════════════════════════════════
+        //  GAME CONTROLLER
+        // ═══════════════════════════════════════════════════
+        const Game = (() => {
+            let poly = null;
+
+            function start(rules) {
+                poly = viewer.getPolytopeData();
+                if(!poly.wPlanes || !poly.wPlanes.length) {
+                    alert('Load a polytope first.');
+                    return;
+                }
+                const seed = Date.now() & 0xFFFFFFFF;
+                GS = buildInitialState(rules, poly.wPlanes, seed);
+                GS.score = computeScore(GS, poly);
+
+                // Hook viewer
+                viewer.wLocked = true;
+                viewer.gameClickHandler = handleClick;
+                viewer.animateToW(GS.wPlanes[GS.planeIdx]);
+                viewer.colors.clear();
+                syncSelectionColor();
+
+                UI.showGame();
+                UI.update();
+            }
+
+            function syncSelectionColor() {
+                if(GS) viewer.selectionColor = TEAMS[GS.activeTeam].color;
+            }
+
+            function handleClick(claim) {
+                if(!GS || GS.phase !== 'claim') return;
+                if(GS.claimsThisTurn >= GS.rules.claimsPerTurn) return;
+                if(claim.type === 'cross') {
+                    GS = applyClaim(GS, claim.a.edge[0], claim.a.edge[1], claim.b.edge[0], claim.b.edge[1], poly);
+                } else {
+                    // 4D path: claim the specific edge [v1Idx, v2Idx] chosen by direction
+                    GS = applyClaim(GS, claim.v1Idx, claim.v2Idx, null, null, poly);
+                }
+                viewer.syncColors(GS.ownership, TEAMS);
+                UI.update();
+                if(GS.claimsThisTurn >= GS.rules.claimsPerTurn) {
+                    setTimeout(()=>endTurn(), 400);
+                }
+            }
+
+            function endTurn() {
+                if(!GS) return;
+                GS = applyEndTurn(GS, poly);
+                if(GS.phase === 'ended') { UI.showWin(); return; }
+                viewer.animateToW(GS.wPlanes[GS.planeIdx]);
+                syncSelectionColor();
+                if(GS.phase === 'choose-w') UI.showChooseW();
+                else if(GS.phase === 'vote') UI.showVote();
+                else UI.hideActionPanel();
+                UI.update();
+            }
+
+            function chooseW(planeIdx) {
+                GS = applyWChoice(GS, planeIdx);
+                viewer.animateToW(GS.wPlanes[GS.planeIdx]);
+                UI.hideActionPanel();
+                UI.update();
+            }
+
+            function submitVote(teamIdx, planeIdx) {
+                GS = applyVote(GS, teamIdx, planeIdx);
+                if(GS.phase === 'claim') {
+                    viewer.animateToW(GS.wPlanes[GS.planeIdx]);
+                    UI.hideActionPanel();
+                }
+                UI.update();
+            }
+
+            function quit() {
+                GS = null;
+                viewer.wLocked = false;
+                viewer.gameClickHandler = null;
+                viewer.clearHover();
+                viewer.colors.clear();
+                viewer.updatePositions();
+                UI.showExplore();
+            }
+
+            return { start, endTurn, chooseW, submitVote, quit };
+        })();
+
+        // ═══════════════════════════════════════════════════
+        //  UI CONTROLLER
+        // ═══════════════════════════════════════════════════
+        const UI = (() => {
+            const el = id => document.getElementById(id);
+
+            function showGame() {
+                el('stats-panel').style.display   = 'none';
+                el('input-panel').style.display   = 'none';
+                el('game-panel').classList.add('visible');
+                el('game-bar').classList.add('visible');
+                el('settings-overlay').classList.remove('open');
+                el('win-screen').classList.remove('visible');
+            }
+
+            function showExplore() {
+                el('stats-panel').style.display   = '';
+                el('input-panel').style.display   = '';
+                el('game-panel').classList.remove('visible');
+                el('game-bar').classList.remove('visible');
+                el('action-panel').classList.remove('visible');
+                el('win-screen').classList.remove('visible');
+            }
+
+            function showWin() {
+                el('action-panel').classList.remove('visible');
+                const sc = GS.score;
+                const teams = Array.from({length:GS.rules.teamCount},(_,i)=>i)
+                    .sort((a,b)=>(sc[b]?.total||0)-(sc[a]?.total||0));
+                const winner = teams[0];
+                el('win-title').textContent = TEAMS[winner].name + ' Wins!';
+                el('win-title').style.color = TEAMS[winner].css;
+                el('win-sub').textContent   = `Round ${GS.round} · ${GS.turn} turns`;
+                el('win-scores-list').innerHTML = teams.map((t,rank)=>`
+                    <div class="win-team-row">
+                        <div class="win-dot" style="background:${TEAMS[t].css}"></div>
+                        <span class="win-rank">#${rank+1}</span>
+                        <span class="win-tname" style="color:${TEAMS[t].css}">${TEAMS[t].name}</span>
+                        <span class="win-tscore">${sc[t]?`${sc[t].v}v ${sc[t].e}e ${sc[t].f}f ${sc[t].c}c = <b>${sc[t].total}</b>`:0}</span>
+                    </div>`).join('');
+                el('win-screen').classList.add('visible');
+            }
+
+            function showChooseW() {
+                el('action-panel-title').textContent = `${TEAMS[GS.activeTeam].name}: choose W-plane`;
+                el('action-panel-sub').textContent = 'Plane with most vertices = richest cross-section';
+                el('vote-status-bar').style.display = 'none';
+                buildPlaneGrid(idx => Game.chooseW(idx), GS.planeIdx, null);
+                el('action-panel').classList.add('visible');
+            }
+
+            function showVote() {
+                el('action-panel-title').textContent = 'Vote: choose a W-plane';
+                el('action-panel-sub').textContent = `Anonymous · ${GS.rules.teamCount} votes needed`;
+                el('vote-status-bar').style.display = '';
+                buildPlaneGrid(idx => {
+                    Game.submitVote(GS.activeTeam, idx);
+                    updateVoteStatus();
+                }, GS.planeIdx, GS.votes[GS.activeTeam]);
+                el('action-panel').classList.add('visible');
+                updateVoteStatus();
+            }
+
+            function hideActionPanel() {
+                el('action-panel').classList.remove('visible');
+            }
+
+            function buildPlaneGrid(onPick, currentIdx, votedIdx) {
+                const poly = viewer.getPolytopeData();
+                const wPlanes = GS.wPlanes;
+                const vCountPerPlane = wPlanes.map(w =>
+                    poly.verts.filter(v => Math.abs(v.w - w) < 0.0001).length
+                );
+                el('plane-grid').innerHTML = wPlanes.map((w,i) => {
+                    const cls = i === currentIdx ? 'plane-btn' :
+                                i === votedIdx   ? 'plane-btn voted' : 'plane-btn';
+                    return `<button class="${cls}" data-idx="${i}">
+                        <span class="pb-w">W=${w.toFixed(3)}</span>
+                        <span class="pb-v">${vCountPerPlane[i]}v</span>
+                    </button>`;
+                }).join('');
+                el('plane-grid').querySelectorAll('.plane-btn').forEach(btn => {
+                    btn.onclick = () => onPick(Number(btn.dataset.idx));
+                });
+            }
+
+            function updateVoteStatus() {
+                const n = GS ? Object.keys(GS.votes).length : 0;
+                const total = GS ? GS.rules.teamCount : 0;
+                el('vote-status-bar').textContent = `${n} / ${total} votes submitted`;
+            }
+
+            function update() {
+                if(!GS) return;
+                const team = TEAMS[GS.activeTeam];
+                el('active-dot').style.background  = team.css;
+                el('active-dot').style.boxShadow   = `0 0 8px ${team.css}`;
+                el('active-name').textContent       = team.name;
+                el('active-name').style.color       = team.css;
+                el('turn-info').textContent         = `Turn ${GS.turn+1} · Round ${GS.round+1}`;
+                el('wplane-badge').textContent      = `W⊗ ${GS.planeIdx+1}/${GS.wPlanes.length}`;
+                el('claims-badge').textContent      = `${GS.claimsThisTurn}/${GS.rules.claimsPerTurn} claimed`;
+
+                const phases = {
+                    claim:'claim', 'choose-w':'choose', vote:'vote', resolution:'resolve', ended:'ended'
+                };
+                const ph = el('phase-badge');
+                ph.textContent = GS.phase;
+                ph.className   = 'phase-' + (phases[GS.phase]||'claim');
+
+                const endBtn = el('end-turn-btn');
+                endBtn.disabled = GS.phase !== 'claim';
+                endBtn.textContent = GS.claimsThisTurn === 0 ? 'Pass →' : 'End Turn →';
+
+                updateScorePanel();
+                updateLogPanel();
+            }
+
+            function updateScorePanel() {
+                const sc = GS.score;
+                el('game-scores').innerHTML = Array.from({length:GS.rules.teamCount},(_,t)=>{
+                    const s   = sc[t] || {v:0,e:0,f:0,c:0,total:0};
+                    const act = t === GS.activeTeam ? ' active-team-row' : '';
+                    const con = Object.values(GS.contested||{}).includes(t) ? ' contested-anim' : '';
+                    return `<div class="gteam-row${act}${con}">
+                        <div class="gteam-dot" style="background:${TEAMS[t].css}"></div>
+                        <span class="gteam-name" style="color:${TEAMS[t].css}">${TEAMS[t].name}</span>
+                        <span class="gteam-score">${s.v}v ${s.e}e ${s.f}f ${s.c}c</span>
+                        <span class="gteam-total" style="color:${TEAMS[t].css}">${s.total}</span>
+                    </div>`;
+                }).join('');
+            }
+
+            function updateLogPanel() {
+                el('game-log').innerHTML = [...GS.log].reverse()
+                    .map(e=>`<div class="log-entry">${e}</div>`).join('');
+            }
+
+            return { showGame, showExplore, showWin, showChooseW, showVote, hideActionPanel, update };
+        })();
+
+        // ═══════════════════════════════════════════════════
+        //  SETTINGS PANEL CONTROLLER
+        // ═══════════════════════════════════════════════════
+        (function(){
+            const el = id => document.getElementById(id);
+
+            // State of settings panel
+            const cfg = { teamCount:2, wMode:'oscillate', ownerMode:'permanent', scoring:'exponential', victory:'last-plane', claimsPerTurn:1 };
+
+            // Option button groups
+            function initGroup(groupId, onChange) {
+                el(groupId).addEventListener('click', e => {
+                    const btn = e.target.closest('.opt-btn');
+                    if(!btn) return;
+                    el(groupId).querySelectorAll('.opt-btn').forEach(b=>b.classList.remove('sel'));
+                    btn.classList.add('sel');
+                    onChange(btn.dataset.val);
+                });
+            }
+
+            initGroup('opt-teams', v => {
+                cfg.teamCount = Number(v);
+                updateSwatches();
+                updateStartBtn();
+            });
+            initGroup('opt-wmode', v => {
+                cfg.wMode = v;
+                el('wmode-desc').textContent = WMODE_DESC[v];
+            });
+            initGroup('opt-owner', v => {
+                cfg.ownerMode = v;
+                el('owner-desc').textContent = OWNER_DESC[v];
+            });
+            initGroup('opt-scoring', v => {
+                cfg.scoring = v;
+                const p = SCORING_PRESETS[v];
+                el('score-formula').textContent = p.formula;
+                const [wV,wE,wF,wC] = p.weights;
+                const max = Math.max(wV,wE,wF,wC) || 1;
+                const h = w => Math.max(4, Math.round(w/max*24));
+                el('bar-v').style.height = h(wV)+'px';
+                el('bar-e').style.height = h(wE)+'px';
+                el('bar-f').style.height = h(wF)+'px';
+                el('bar-c').style.height = h(wC)+'px';
+            });
+            initGroup('opt-victory', v => {
+                cfg.victory = v;
+                el('victory-desc').textContent = VICTORY_DESC[v];
+            });
+            initGroup('opt-claims', v => { cfg.claimsPerTurn = Number(v); });
+
+            function updateSwatches() {
+                el('team-swatches').innerHTML = TEAMS.slice(0, cfg.teamCount)
+                    .map(t=>`<div class="team-swatch" style="background:${t.css}" title="${t.name}"></div>`)
+                    .join('');
+            }
+
+            function updateStartBtn() {
+                const hasPolytope = viewer.verts && viewer.verts.length > 0;
+                el('start-game-btn').disabled = !hasPolytope;
+                el('start-game-btn').title = hasPolytope ? '' : 'Load a polytope first';
+            }
+
+            updateSwatches();
+
+            // Open/close
+            el('settings-btn').onclick  = () => { el('settings-overlay').classList.add('open'); updateStartBtn(); };
+            el('settings-close').onclick= () => el('settings-overlay').classList.remove('open');
+            el('settings-overlay').onclick = e => { if(e.target===el('settings-overlay')) el('settings-overlay').classList.remove('open'); };
+
+            // Start game
+            el('start-game-btn').onclick = () => {
+                const p = SCORING_PRESETS[cfg.scoring];
+                Game.start({
+                    teamCount:    cfg.teamCount,
+                    wMode:        cfg.wMode,
+                    ownerMode:    cfg.ownerMode,
+                    scoring:      p.weights,
+                    victory:      cfg.victory,
+                    claimsPerTurn:cfg.claimsPerTurn,
+                });
+            };
+
+            // End turn / quit buttons
+            el('end-turn-btn').onclick = () => Game.endTurn();
+            el('quit-btn').onclick     = () => { Game.quit(); };
+
+            // Win screen buttons
+            el('play-again-btn').onclick    = () => { el('win-screen').classList.remove('visible'); Game.start({teamCount:cfg.teamCount,wMode:cfg.wMode,ownerMode:cfg.ownerMode,scoring:SCORING_PRESETS[cfg.scoring].weights,victory:cfg.victory,claimsPerTurn:cfg.claimsPerTurn}); };
+            el('new-settings-btn').onclick  = () => { el('win-screen').classList.remove('visible'); el('settings-overlay').classList.add('open'); GS=null; UI.showExplore(); };
+        })();
 
         // --- Polytope Library ---
         (function() {
@@ -924,6 +2128,7 @@
                 .then(data => {
                     allShapes = (Array.isArray(data) ? data : [data])
                         .sort((a, b) => a.v - b.v);
+                    searchEl.style.display = '';
                     renderList(allShapes);
                 })
                 .catch(() => {
