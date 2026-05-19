@@ -321,6 +321,14 @@
                     </div>
                     <div class="s-desc" id="victory-desc">Game ends after all W-planes visited. Most score wins.</div>
                 </div>
+                <div class="s-section">
+                    <div class="s-label">Fog of War</div>
+                    <div class="s-opts" id="opt-fog">
+                        <button class="opt-btn sel" data-val="off">Off</button>
+                        <button class="opt-btn" data-val="on">On</button>
+                    </div>
+                    <div class="s-desc" id="fog-desc">Reference structure and completed-cell wireframes visible</div>
+                </div>
                 <div class="s-section" style="border:none">
                     <div class="s-label">Claims per Turn</div>
                     <div class="s-opts" id="opt-claims">
@@ -391,6 +399,9 @@
                 this.crossEdgeGeom = null;
                 this.refVertGeom = null;
                 this.refEdgeGeom = null;
+                this.refEdgeMesh = null;
+                this.completedCellEdgeMesh = null;
+                this.fogOfWar = false;
                 
                 this.init();
                 this.setupEvents();
@@ -876,7 +887,9 @@
                 this.crossEdgeGeom = null;
                 this.crossFaceGeom = null;
                 this.refEdgeGeom = null;
+                this.refEdgeMesh = null;
                 this.completedCellEdgeGeom = null;
+                this.completedCellEdgeMesh = null;
                 this.highlightLineGeom = null;
                 this.highlightPointGeom = null;
                 this.clearHover();
@@ -973,7 +986,9 @@
                 this.refEdgeGeom = new THREE.BufferGeometry();
                 this.refEdgeGeom.setAttribute('position', new THREE.BufferAttribute(new Float32Array(this.edges.length * 6), 3));
                 this.refEdgeGeom.setAttribute('color', new THREE.BufferAttribute(new Float32Array(this.edges.length * 6), 3));
-                this.eGroup.add(new THREE.LineSegments(this.refEdgeGeom, new THREE.LineBasicMaterial({vertexColors:true, transparent:true, opacity:0.3})));
+                this.refEdgeMesh = new THREE.LineSegments(this.refEdgeGeom, new THREE.LineBasicMaterial({vertexColors:true, transparent:true, opacity:0.3}));
+                this.refEdgeMesh.visible = !this.fogOfWar;
+                this.eGroup.add(this.refEdgeMesh);
 
                 // Completed-cell highlight edges (full 4D wireframe at high opacity)
                 const maxCellEdgeSegs = this.cells.reduce((s, cell) =>
@@ -982,7 +997,15 @@
                 this.completedCellEdgeGeom.setAttribute('position', new THREE.BufferAttribute(new Float32Array(Math.max(maxCellEdgeSegs, 1) * 6), 3));
                 this.completedCellEdgeGeom.setAttribute('color',    new THREE.BufferAttribute(new Float32Array(Math.max(maxCellEdgeSegs, 1) * 6), 3));
                 this.completedCellEdgeGeom.setDrawRange(0, 0);
-                this.eGroup.add(new THREE.LineSegments(this.completedCellEdgeGeom, new THREE.LineBasicMaterial({vertexColors:true, transparent:true, opacity:0.85})));
+                this.completedCellEdgeMesh = new THREE.LineSegments(this.completedCellEdgeGeom, new THREE.LineBasicMaterial({vertexColors:true, transparent:true, opacity:0.85}));
+                this.completedCellEdgeMesh.visible = !this.fogOfWar;
+                this.eGroup.add(this.completedCellEdgeMesh);
+            }
+
+            setFogOfWar(enabled) {
+                this.fogOfWar = enabled;
+                if(this.refEdgeMesh) this.refEdgeMesh.visible = !enabled;
+                if(this.completedCellEdgeMesh) this.completedCellEdgeMesh.visible = !enabled;
             }
 
             getActiveIntersections() {
@@ -1537,6 +1560,7 @@
             // pre-generate shuffled sequence for random mode
             const seq = wPlanes.map((_,i)=>i);
             for(let i=seq.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[seq[i],seq[j]]=[seq[j],seq[i]];}
+            const firstTeam = Math.floor(rng() * rules.teamCount);
             return {
                 rules,
                 seed,
@@ -1545,7 +1569,7 @@
                 round: 0,          // completed rounds (all teams went once)
                 planeIdx: 0,
                 wDirection: 1,
-                activeTeam: 0,
+                activeTeam: firstTeam,
                 phase: 'claim',    // claim | choose-w | vote | resolution | ended
                 votes: {},         // teamIdx → planeIdx
                 votesIn: 0,
@@ -1797,6 +1821,7 @@
                 // Hook viewer
                 viewer.wLocked = true;
                 viewer.gameClickHandler = handleClick;
+                viewer.setFogOfWar(!!rules.fogOfWar);
                 viewer.animateToW(GS.wPlanes[GS.planeIdx]);
                 viewer.colors.clear();
                 syncSelectionColor();
@@ -1857,6 +1882,7 @@
                 GS = null;
                 viewer.wLocked = false;
                 viewer.gameClickHandler = null;
+                viewer.setFogOfWar(false);
                 viewer.clearHover();
                 viewer.colors.clear();
                 viewer.updatePositions();
@@ -2014,7 +2040,7 @@
             const el = id => document.getElementById(id);
 
             // State of settings panel
-            const cfg = { teamCount:2, wMode:'oscillate', ownerMode:'permanent', scoring:'exponential', victory:'last-plane', claimsPerTurn:1 };
+            const cfg = { teamCount:2, wMode:'oscillate', ownerMode:'permanent', scoring:'exponential', victory:'last-plane', claimsPerTurn:1, fogOfWar:false };
 
             // Option button groups
             function initGroup(groupId, onChange) {
@@ -2057,6 +2083,12 @@
                 el('victory-desc').textContent = VICTORY_DESC[v];
             });
             initGroup('opt-claims', v => { cfg.claimsPerTurn = Number(v); });
+            initGroup('opt-fog', v => {
+                cfg.fogOfWar = v === 'on';
+                el('fog-desc').textContent = cfg.fogOfWar
+                    ? 'Reference structure and completed-cell wireframes hidden'
+                    : 'Reference structure and completed-cell wireframes visible';
+            });
 
             function updateSwatches() {
                 el('team-swatches').innerHTML = TEAMS.slice(0, cfg.teamCount)
@@ -2087,6 +2119,7 @@
                     scoring:      p.weights,
                     victory:      cfg.victory,
                     claimsPerTurn:cfg.claimsPerTurn,
+                    fogOfWar:     cfg.fogOfWar,
                 });
             };
 
@@ -2095,7 +2128,7 @@
             el('quit-btn').onclick     = () => { Game.quit(); };
 
             // Win screen buttons
-            el('play-again-btn').onclick    = () => { el('win-screen').classList.remove('visible'); Game.start({teamCount:cfg.teamCount,wMode:cfg.wMode,ownerMode:cfg.ownerMode,scoring:SCORING_PRESETS[cfg.scoring].weights,victory:cfg.victory,claimsPerTurn:cfg.claimsPerTurn}); };
+            el('play-again-btn').onclick    = () => { el('win-screen').classList.remove('visible'); Game.start({teamCount:cfg.teamCount,wMode:cfg.wMode,ownerMode:cfg.ownerMode,scoring:SCORING_PRESETS[cfg.scoring].weights,victory:cfg.victory,claimsPerTurn:cfg.claimsPerTurn,fogOfWar:cfg.fogOfWar}); };
             el('new-settings-btn').onclick  = () => { el('win-screen').classList.remove('visible'); el('settings-overlay').classList.add('open'); GS=null; UI.showExplore(); };
         })();
 
