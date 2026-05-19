@@ -10,7 +10,7 @@
 
         /* Top slider panel */
         #slider-panel{position:absolute;top:10px;left:10px;right:10px;height:50px;background:rgba(0,0,0,0.8);border-radius:8px;z-index:100;display:flex;align-items:center;padding:0 20px;gap:15px}
-        #w-slider{flex:1;height:30px;background:#333;border-radius:4px;cursor:pointer}
+        #w-slider{width:100%;height:30px;background:#333;border-radius:4px;cursor:pointer}
         #w-slider::-webkit-slider-track{background:#333;height:30px;border-radius:4px}
         #w-slider::-moz-range-track{background:#333;height:30px;border-radius:4px}
         #slider-value{min-width:80px;text-align:center;font-family:monospace}
@@ -124,15 +124,17 @@
         #game-bar.visible{display:flex}
         #active-dot{width:11px;height:11px;border-radius:50%;flex-shrink:0;box-shadow:0 0 8px currentColor}
         #active-name{font-size:12px;font-weight:700;flex-shrink:0}
-        #turn-info{font-size:10px;color:#666;flex:1}
-        #phase-badge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;letter-spacing:.5px;text-transform:uppercase}
-        .phase-claim{background:rgba(33,150,243,0.2);color:#5aabff;border:1px solid rgba(33,150,243,0.3)}
-        .phase-vote{background:rgba(180,130,30,0.2);color:#e0a030;border:1px solid rgba(180,130,30,0.3)}
-        .phase-choose{background:rgba(130,80,200,0.2);color:#b080e0;border:1px solid rgba(130,80,200,0.3)}
-        .phase-resolve{background:rgba(200,80,80,0.2);color:#e08080;border:1px solid rgba(200,80,80,0.3)}
-        .phase-ended{background:rgba(100,100,100,0.2);color:#888;border:1px solid #333}
-        #wplane-badge{font-size:9px;color:#c87a3a;font-family:monospace;background:rgba(200,120,50,0.1);padding:2px 7px;border-radius:3px;border:1px solid rgba(200,120,50,0.2)}
-        #claims-badge{font-size:9px;color:#aaa;margin-left:auto}
+        #bar-middle{flex:1;display:flex;align-items:center;gap:10px;justify-content:center;overflow:hidden;min-width:0}
+        #bar-status{color:#fff;font-size:11px;white-space:nowrap;letter-spacing:.03em;flex-shrink:0}
+        #w-dot-overlay{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);height:22px}
+        .w-dot{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;transform:translate(-50%,-50%);transition:box-shadow .12s,transform .12s,background .12s}
+        .w-dot-current{background:#fff;cursor:default;box-shadow:0 0 9px rgba(0,0,0,.8)}
+        .w-dot-selectable{background:#FF6B35;cursor:pointer}
+        .w-dot-selectable:hover{box-shadow:0 0 11px rgba(0,0,0,.9);transform:translate(-50%,-50%) scale(1.28)}
+        .w-dot-voted{background:#FF6B35;cursor:pointer;box-shadow:0 0 13px rgba(0,0,0,1);outline:2px solid rgba(0,0,0,.55);outline-offset:2px}
+        .w-dot-dim{background:rgba(255,107,53,.32);cursor:pointer}
+        .w-dot-dim:hover{background:rgba(255,107,53,.68);box-shadow:0 0 7px rgba(0,0,0,.7)}
+        #turn-info{font-size:10px;color:#666;flex-shrink:0;white-space:nowrap}
 
         /* ─── GAME SCORE PANEL ─── */
         #game-panel{position:absolute;bottom:10px;right:10px;width:230px;background:rgba(0,0,0,0.9);border:1px solid #222;border-radius:8px;z-index:100;display:none;flex-direction:column;overflow:hidden}
@@ -196,7 +198,10 @@
         <!-- Top slider panel -->
         <div id="slider-panel">
             <span style="font-size:12px;min-width:20px">W:</span>
-            <input type="range" id="w-slider" min="-1" max="1" step="0.01" value="0">
+            <div id="slider-wrap" style="flex:1;position:relative;display:flex;align-items:center;height:30px;">
+                <input type="range" id="w-slider" min="-1" max="1" step="0.01" value="0" style="width:100%;height:30px;">
+                <div id="w-dot-overlay" style="display:none;position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);height:22px;pointer-events:none;"></div>
+            </div>
             <span id="slider-value">0.00</span>
             <button id="settings-btn" title="Game Settings">⚙</button>
         </div>
@@ -205,13 +210,18 @@
         <div id="shape-title"></div>
 
         <!-- Game bar (below slider, visible during game) -->
+        <!-- Multiplayer turn bar — fixed at top, shows all team chips -->
+        <div id="c4d-turn-bar" style="display:none;position:fixed;top:0;left:0;right:0;z-index:10000;padding:7px 16px;background:rgba(0,0,0,0.82);backdrop-filter:blur(6px);align-items:center;justify-content:center;gap:10px;font-family:monospace;font-size:12px;pointer-events:none;border-bottom:1px solid rgba(255,255,255,0.07);">
+            <div id="c4d-team-chips" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;"></div>
+        </div>
+
         <div id="game-bar">
             <div id="active-dot"></div>
             <span id="active-name"></span>
+            <div id="bar-middle">
+                <span id="bar-status"></span>
+            </div>
             <span id="turn-info"></span>
-            <span id="phase-badge" class="phase-claim">Claim</span>
-            <span id="wplane-badge">W 1/1</span>
-            <span id="claims-badge">0/1 claimed</span>
         </div>
 
         <!-- Library sidebar -->
@@ -353,7 +363,7 @@
             </div>
         </div>
 
-        <div id="instructions">Left-click: Claim · Right-drag: Rotate · Wheel: Zoom</div>
+        <div id="instructions">Left-click: Claim · Drag/Right/Middle: Rotate · Wheel: Zoom</div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -412,11 +422,21 @@
             init() {
                 this.scene = new THREE.Scene();
                 this.scene.background = new THREE.Color(0x222222);
-                this.camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 1000);
+                const w = innerWidth  || 800;
+                const h = innerHeight || 600;
+                this.camera = new THREE.PerspectiveCamera(75, w/h, 0.1, 1000);
                 this.updateCam();
                 this.renderer = new THREE.WebGLRenderer({antialias:true});
-                this.renderer.setSize(innerWidth, innerHeight);
+                this.renderer.setSize(w, h);
                 document.getElementById('container').appendChild(this.renderer.domElement);
+                // Re-apply correct size once layout is complete (handles iframe 0×0 on first paint)
+                requestAnimationFrame(() => {
+                    if (innerWidth > 0 && innerHeight > 0) {
+                        this.renderer.setSize(innerWidth, innerHeight);
+                        this.camera.aspect = innerWidth / innerHeight;
+                        this.camera.updateProjectionMatrix();
+                    }
+                });
                 
                 this.scene.add(new THREE.AmbientLight(0x404040, 0.6));
                 const light = new THREE.DirectionalLight(0xffffff, 0.8);
@@ -506,8 +526,17 @@
 
                 const canvas = this.renderer.domElement;
                 canvas.onmousedown = e => {
-                    if(e.button === 2) {
+                    if(e.button === 2 || e.button === 1) {
+                        // Right or middle click: start rotating immediately
                         this.rotating = true;
+                        this.wasDragRotating = false;
+                        this.mouse = {x:e.clientX, y:e.clientY};
+                        if(e.button === 1) e.preventDefault();
+                    } else if(e.button === 0) {
+                        // Left click: track drag start; promote to rotate if moved past threshold
+                        this._leftDragOrigin = {x:e.clientX, y:e.clientY};
+                        this._leftDragging = false;
+                        this.wasDragRotating = false;
                         this.mouse = {x:e.clientX, y:e.clientY};
                     }
                 };
@@ -521,19 +550,42 @@
                         this.updateCam();
                         return;
                     }
+                    if(this._leftDragOrigin && !this._leftDragging) {
+                        const d = Math.hypot(e.clientX - this._leftDragOrigin.x, e.clientY - this._leftDragOrigin.y);
+                        if(d > 6) {
+                            // Promoted: treat left drag as rotation
+                            this._leftDragging = true;
+                            this.wasDragRotating = true;
+                            this.rotating = true;
+                            this.mouse = {x:e.clientX, y:e.clientY};
+                        }
+                        return;
+                    }
+                    if(this._leftDragging && this.rotating) {
+                        // handled by rotating block above on next move, but guard just in case
+                        return;
+                    }
                     if(this.crossVertGeom && this.selectedInter) {
                         this.updateHoveredCandidate(e.clientX, e.clientY);
                         this.updateHighlight();
                     }
                 };
-                canvas.onmouseup = e => e.button === 2 && (this.rotating = false);
+                canvas.onmouseup = e => {
+                    if(e.button === 2 || e.button === 1) {
+                        this.rotating = false;
+                    } else if(e.button === 0) {
+                        if(this._leftDragging) this.rotating = false;
+                        this._leftDragOrigin = null;
+                        this._leftDragging = false;
+                    }
+                };
                 canvas.onwheel = e => {
                     e.preventDefault();
                     this.camDist = Math.max(2, Math.min(20, this.camDist + e.deltaY * 0.01));
                     this.updateCam();
                 };
                 canvas.onclick = e => {
-                    if(e.button !== 0 || this.rotating || !this.crossVertGeom) return;
+                    if(e.button !== 0 || this.rotating || this.wasDragRotating || !this.crossVertGeom) return;
                     if(!this.selectedInter) {
                         // Step 1: select nearest dot
                         const dot = this.getNearestDot(e.clientX, e.clientY);
@@ -571,6 +623,7 @@
                     }
                 };
                 onresize = () => {
+                    if (!innerWidth || !innerHeight) return;
                     this.camera.aspect = innerWidth/innerHeight;
                     this.camera.updateProjectionMatrix();
                     this.renderer.setSize(innerWidth, innerHeight);
@@ -948,10 +1001,11 @@
                 this.crossEdgeGeom.setDrawRange(0, 0);
                 this.eGroup.add(new THREE.LineSegments(this.crossEdgeGeom, new THREE.LineBasicMaterial({vertexColors: true, linewidth: 2})));
 
-                // Highlight lines: up to 32 segments (dim options + bright chosen)
+                // Highlight lines: large enough for any polytope (cross-section + 4D stubs per selected dot)
+                const _hlMax = Math.max(this.edges.length + this.faces.length, 512);
                 this.highlightLineGeom = new THREE.BufferGeometry();
-                this.highlightLineGeom.setAttribute('position', new THREE.BufferAttribute(new Float32Array(32 * 6), 3));
-                this.highlightLineGeom.setAttribute('color', new THREE.BufferAttribute(new Float32Array(32 * 6), 3));
+                this.highlightLineGeom.setAttribute('position', new THREE.BufferAttribute(new Float32Array(_hlMax * 6), 3));
+                this.highlightLineGeom.setAttribute('color', new THREE.BufferAttribute(new Float32Array(_hlMax * 6), 3));
                 this.highlightLineGeom.setDrawRange(0, 0);
                 this.eGroup.add(new THREE.LineSegments(this.highlightLineGeom, new THREE.LineBasicMaterial({vertexColors: true, linewidth: 3, depthTest: false})));
 
@@ -1044,6 +1098,9 @@
                 const activeInters = this.getActiveIntersections();
                 let best = null, bestDist = 36; // px threshold for dot selection
                 activeInters.forEach(inter => {
+                    // In permanent mode, skip dots whose both edge vertices are already owned
+                    if (this.ownerMode === 'permanent' &&
+                        this.colors.has(inter.edge[0]) && this.colors.has(inter.edge[1])) return;
                     const [sx, sy] = this._screenPos(inter);
                     const dist = Math.hypot(mouseX - sx, mouseY - sy);
                     if(dist < bestDist) { bestDist = dist; best = inter; }
@@ -1070,22 +1127,16 @@
             }
 
             get4DPaths(inter) {
-                // 4D edges from inter's endpoint vertices, filtered to only those
-                // converging toward the current w-slice (not going further away).
-                // From vi below the slice (vi.w < W): only edges where other.w > vi.w
-                // From vi above the slice (vi.w > W): only edges where other.w < vi.w
+                // All 4D edges from inter's two endpoint vertices, in every direction.
+                // Skip the intersection edge itself (it passes through the dot already).
                 const paths = [];
                 const seen = new Set();
-                const W = this.w;
+                // Pre-exclude the intersection's own edge so it's never shown as a stub
+                seen.add([Math.min(inter.edge[0], inter.edge[1]), Math.max(inter.edge[0], inter.edge[1])].join(','));
                 [inter.edge[0], inter.edge[1]].forEach(vi => {
-                    const viW = this.verts[vi].w;
                     this.edges.forEach(([a, b]) => {
                         if(a !== vi && b !== vi) return;
                         const other = a === vi ? b : a;
-                        const otherW = this.verts[other].w;
-                        // Only keep edges moving toward the slice, not away from it
-                        const converging = viW < W ? otherW > viW : otherW < viW;
-                        if(!converging) return;
                         const key = [Math.min(vi, other), Math.max(vi, other)].join(',');
                         if(seen.has(key)) return;
                         seen.add(key);
@@ -1166,7 +1217,7 @@
                         }
                     });
 
-                    // 4D path stubs — short lines from selected dot toward reference vertex
+                    // 4D path stubs — lines from selected dot toward reference vertices in 4D
                     paths4D.forEach(path => {
                         const key = `${path.v1Idx},${path.v2Idx}`;
                         const isChosen = chosen4D === key;
@@ -1175,7 +1226,6 @@
                         const p0 = this.project(this.selectedInter);
                         const p1 = this.project(refV);
                         const b = lVerts * 3;
-                        if(b + 6 > lPos.length) return;
                         lPos[b]  =p0.x; lPos[b+1]=p0.y; lPos[b+2]=p0.z;
                         lPos[b+3]=p1.x; lPos[b+4]=p1.y; lPos[b+5]=p1.z;
                         lCol[b]  =c.r;  lCol[b+1]=c.g;  lCol[b+2]=c.b;
@@ -1430,7 +1480,7 @@
                 if(this.gameClickHandler) return; // game mode owns the UI
                 const next = teams[this.colorIdx % teams.length];
                 const el = document.getElementById('instructions');
-                if(el) el.innerHTML = `Left-click: Claim &nbsp;<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${next.css};vertical-align:middle"></span> <b style="color:${next.css}">${next.name}</b> &nbsp;·&nbsp; Right-drag: Rotate &nbsp;·&nbsp; Wheel: Zoom`;
+                if(el) el.innerHTML = `Left-click: Claim &nbsp;<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${next.css};vertical-align:middle"></span> <b style="color:${next.css}">${next.name}</b> &nbsp;·&nbsp; Drag/Right/Middle: Rotate &nbsp;·&nbsp; Wheel: Zoom`;
             }
 
             updateColors() {
@@ -1466,7 +1516,16 @@
                 this.clearHover();
                 const startW = this.w;
                 const dist = Math.abs(targetW - startW);
-                if(dist < 0.0001) return;
+                if(dist < 0.0001) {
+                    this.w = targetW;
+                    const _s = document.getElementById('w-slider');
+                    const _v = document.getElementById('slider-value');
+                    if(_s) _s.value = targetW.toFixed(6);
+                    if(_v) _v.textContent = targetW.toFixed(2);
+                    this.updateSliderMarkers();
+                    this.updatePositions();
+                    return;
+                }
                 // Duration scales with distance so short hops feel snappy, long flights feel grand
                 const duration = Math.min(2800, 560 + dist * 1040);
                 const startTime = performance.now();
@@ -1825,6 +1884,7 @@
 
                 // Hook viewer
                 viewer.wLocked = true;
+                viewer.ownerMode = rules.ownerMode || 'permanent';
                 viewer.gameClickHandler = handleClick;
                 viewer.setFogOfWar(!!rules.fogOfWar);
                 viewer.animateToW(GS.wPlanes[GS.planeIdx]);
@@ -1883,6 +1943,24 @@
                 UI.update();
             }
 
+            // Multiplayer entry-point: activate click handler using server-provided GS.
+            // Caller must set GS before calling. Called from game_started handler.
+            function startFromGS(config) {
+                poly = viewer.getPolytopeData();
+                if (!poly || !poly.wPlanes || !poly.wPlanes.length) return;
+                viewer.wLocked = true;
+                viewer.ownerMode = config?.ownerMode || 'permanent';
+                viewer.gameClickHandler = handleClick; // wrapped by patchGame's isMyTurn() check
+                viewer.setFogOfWar(!!config?.fogOfWar);
+                if (GS) {
+                    viewer.animateToW(GS.wPlanes[GS.planeIdx]);
+                    viewer.syncColors(GS.ownership, TEAMS);
+                    syncSelectionColor();
+                }
+                UI.showGame();
+                UI.update();
+            }
+
             function quit() {
                 GS = null;
                 viewer.wLocked = false;
@@ -1894,7 +1972,7 @@
                 UI.showExplore();
             }
 
-            return { start, endTurn, chooseW, submitVote, quit };
+            return { start, startFromGS, endTurn, chooseW, submitVote, quit };
         })();
 
         // ═══════════════════════════════════════════════════
@@ -1941,52 +2019,56 @@
             }
 
             function showChooseW() {
-                el('action-panel-title').textContent = `${TEAMS[GS.activeTeam].name}: choose W-plane`;
-                el('action-panel-sub').textContent = 'Plane with most vertices = richest cross-section';
-                el('vote-status-bar').style.display = 'none';
-                buildPlaneGrid(idx => Game.chooseW(idx), GS.planeIdx, null);
-                el('action-panel').classList.add('visible');
+                el('action-panel').classList.remove('visible');
+                buildWDots(idx => Game.chooseW(idx), GS.planeIdx, null);
+                el('w-dot-overlay').style.display = 'block';
+                update();
             }
 
             function showVote() {
-                el('action-panel-title').textContent = 'Vote: choose a W-plane';
-                el('action-panel-sub').textContent = `Anonymous · ${GS.rules.teamCount} votes needed`;
-                el('vote-status-bar').style.display = '';
-                buildPlaneGrid(idx => {
+                el('action-panel').classList.remove('visible');
+                const myVote = GS.votes[GS.activeTeam] ?? null;
+                buildWDots(idx => {
                     Game.submitVote(GS.activeTeam, idx);
-                    updateVoteStatus();
-                }, GS.planeIdx, GS.votes[GS.activeTeam]);
-                el('action-panel').classList.add('visible');
-                updateVoteStatus();
+                    showVote();
+                }, GS.planeIdx, myVote);
+                el('w-dot-overlay').style.display = 'block';
+                update();
             }
 
             function hideActionPanel() {
                 el('action-panel').classList.remove('visible');
+                el('w-dot-overlay').style.display = 'none';
             }
 
-            function buildPlaneGrid(onPick, currentIdx, votedIdx) {
+            function buildWDots(onPick, currentIdx, votedIdx) {
+                const overlay = el('w-dot-overlay');
+                const slider  = el('w-slider');
+                const wMin = parseFloat(slider.min);
+                const wMax = parseFloat(slider.max);
+                const range = wMax - wMin || 1;
                 const poly = viewer.getPolytopeData();
-                const wPlanes = GS.wPlanes;
-                const vCountPerPlane = wPlanes.map(w =>
-                    poly.verts.filter(v => Math.abs(v.w - w) < 0.0001).length
-                );
-                el('plane-grid').innerHTML = wPlanes.map((w,i) => {
-                    const cls = i === currentIdx ? 'plane-btn' :
-                                i === votedIdx   ? 'plane-btn voted' : 'plane-btn';
-                    return `<button class="${cls}" data-idx="${i}">
-                        <span class="pb-w">W=${w.toFixed(3)}</span>
-                        <span class="pb-v">${vCountPerPlane[i]}v</span>
-                    </button>`;
-                }).join('');
-                el('plane-grid').querySelectorAll('.plane-btn').forEach(btn => {
-                    btn.onclick = () => onPick(Number(btn.dataset.idx));
-                });
-            }
+                const vCounts = poly && poly.verts
+                    ? GS.wPlanes.map(w => poly.verts.filter(v => Math.abs(v.w - w) < 0.0001).length)
+                    : GS.wPlanes.map(() => 0);
 
-            function updateVoteStatus() {
-                const n = GS ? Object.keys(GS.votes).length : 0;
-                const total = GS ? GS.rules.teamCount : 0;
-                el('vote-status-bar').textContent = `${n} / ${total} votes submitted`;
+                let html = '';
+                GS.wPlanes.forEach((w, i) => {
+                    const pct       = ((w - wMin) / range) * 100;
+                    const isCurrent = i === currentIdx;
+                    const isVoted   = votedIdx != null && i === votedIdx;
+                    const isVisited = !!GS.visitedPlanes?.[i] && !isCurrent;
+                    const cls = isCurrent ? 'w-dot w-dot-current'
+                              : isVoted   ? 'w-dot w-dot-voted'
+                              : isVisited ? 'w-dot w-dot-dim'
+                              :             'w-dot w-dot-selectable';
+                    const left = `calc(7px + ${pct / 100} * (100% - 14px))`;
+                    html += `<div class="${cls}" data-idx="${i}" style="left:${left};pointer-events:auto;" title="W=${w.toFixed(3)} · ${vCounts[i]}v"></div>`;
+                });
+                overlay.innerHTML = html;
+                overlay.querySelectorAll('.w-dot:not(.w-dot-current)').forEach(dot => {
+                    dot.addEventListener('click', () => onPick(Number(dot.dataset.idx)));
+                });
             }
 
             function update() {
@@ -1997,15 +2079,22 @@
                 el('active-name').textContent       = team.name;
                 el('active-name').style.color       = team.css;
                 el('turn-info').textContent         = `Turn ${GS.turn+1} · Round ${GS.round+1}`;
-                el('wplane-badge').textContent      = `W⊗ ${GS.planeIdx+1}/${GS.wPlanes.length}`;
-                el('claims-badge').textContent      = `${GS.claimsThisTurn}/${GS.rules.claimsPerTurn} claimed`;
 
-                const phases = {
-                    claim:'claim', 'choose-w':'choose', vote:'vote', resolution:'resolve', ended:'ended'
-                };
-                const ph = el('phase-badge');
-                ph.textContent = GS.phase;
-                ph.className   = 'phase-' + (phases[GS.phase]||'claim');
+                // Centered white status text
+                const status = el('bar-status');
+                if (GS.phase === 'claim') {
+                    const c = GS.claimsThisTurn, m = GS.rules.claimsPerTurn;
+                    status.textContent = `Claim  ${c} / ${m}`;
+                } else if (GS.phase === 'choose-w') {
+                    status.textContent = 'Choose W by clicking a dot on the slider above!';
+                } else if (GS.phase === 'vote') {
+                    const voted = Object.keys(GS.votes || {}).length;
+                    status.textContent = `Vote  ${voted} / ${GS.rules.teamCount}`;
+                } else if (GS.phase === 'ended') {
+                    status.textContent = 'Game Over';
+                } else {
+                    status.textContent = GS.phase;
+                }
 
                 const endBtn = el('end-turn-btn');
                 endBtn.disabled = GS.phase !== 'claim';
@@ -2268,6 +2357,362 @@
                 }
             }
         })();
+
+        // ── Admin View Mode ───────────────────────────────────────────────────────
+        // Activated when loaded inside an iframe (admin panel embeds this page).
+        // Strips game UI, reports polytope selection, builds GS on start signal,
+        // and provides a singleplayer test button for the admin.
+        (function () {
+            if (window.self === window.top) return; // standalone — do nothing
+
+            const hide = ['game-bar','game-panel','action-panel','win-screen',
+                          'settings-overlay','settings-btn','input-panel','instructions'];
+            hide.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
+
+            // Track the last loaded polytope path
+            let _adminPolytopePath = null;
+
+            // Intercept .off fetches — tell parent which polytope was selected
+            const _fetch = window.fetch;
+            window.fetch = async function (url, ...args) {
+                const result = await _fetch(url, ...args);
+                if (typeof url === 'string' && url.endsWith('.off')) {
+                    _adminPolytopePath = url;
+                    try {
+                        window.parent.postMessage({ type: 'c4d_polytope_selected', path: url }, '*');
+                    } catch (_) {}
+                }
+                return result;
+            };
+
+            // ── Singleplayer test button (admin-only, top-right) ──────────────
+            const testBtn = document.createElement('button');
+            testBtn.textContent = '⚙ Test';
+            Object.assign(testBtn.style, {
+                position: 'fixed', top: '8px', right: '8px', zIndex: '10001',
+                background: 'rgba(15,15,25,0.92)', color: '#7ab',
+                border: '1px solid #335', borderRadius: '5px',
+                padding: '4px 11px', fontSize: '11px', cursor: 'pointer',
+                fontFamily: 'monospace', backdropFilter: 'blur(4px)',
+                lineHeight: '1.6',
+            });
+            testBtn.onclick = function () {
+                try { window.parent.postMessage({ type: 'c4d_test_request' }, '*'); } catch (_) {}
+            };
+            document.body.appendChild(testBtn);
+
+            // Listen for signals from the admin panel
+            window.addEventListener('message', function (evt) {
+                if (!evt.data || evt.data.type !== 'c4d_admin_start') return;
+                const rules = evt.data.rules;
+
+                if (evt.data.test) {
+                    // ── Test mode: run singleplayer inside the iframe ──────────
+                    // Apply admin team colors directly into TEAMS[] (applyTeamColors is
+                    // in the multiplayer scope; replicate the mapping here)
+                    if (rules.teamColors && rules.teamColors.length) {
+                        const mapped = rules.teamColors.map(tc => ({
+                            name:  tc.displayName || (tc.name.charAt(0).toUpperCase() + tc.name.slice(1)),
+                            color: tc.color,
+                            css:   '#' + ('000000' + Number(tc.color).toString(16)).slice(-6),
+                        }));
+                        TEAMS.splice(0, TEAMS.length, ...mapped);
+                        while (TEAMS.length < 6) TEAMS.push({ ...TEAMS[TEAMS.length - 1] });
+                    }
+                    // Re-show game UI elements hidden by this IIFE
+                    ['game-bar','game-panel','action-panel','win-screen'].forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) el.style.display = '';
+                    });
+                    Game.start(rules);
+                    testBtn.textContent = '↺ Restart Test';
+                    return;
+                }
+
+                // ── Normal start: build GS and postMessage back to admin ──────
+                const poly = viewer.getPolytopeData();
+                if (!poly || !poly.wPlanes || !poly.wPlanes.length) {
+                    try { window.parent.postMessage({ type: 'c4d_game_error', error: 'No polytope loaded — select one first' }, '*'); } catch (_) {}
+                    return;
+                }
+                const seed = Date.now() & 0xFFFFFFFF;
+                const gs = buildInitialState(rules, poly.wPlanes, seed);
+                gs.score = computeScore(gs, poly);
+                try {
+                    window.parent.postMessage({ type: 'c4d_game_ready', gs, polytopePath: _adminPolytopePath }, '*');
+                } catch (_) {}
+            });
+        })();
+    </script>
+
+    <!-- ═══ COLYSEUS MULTIPLAYER ════════════════════════════════════════ -->
+    <script src="https://unpkg.com/colyseus.js@0.15.24/dist/colyseus.js"></script>
+    <script>
+    // Multiplayer integration — only activates when a roomId is in the URL path.
+    // Single-player works unchanged when accessed at /c4d/index.html directly.
+    // Never runs inside the admin panel iframe.
+    (function () {
+        if (window.self !== window.top) return; // admin iframe — stay in exploration mode
+
+        // Extract roomId from path  /c4d/<roomId>
+        const pathParts = window.location.pathname.replace(/\/$/, '').split('/').filter(Boolean);
+        const lastPart  = pathParts[pathParts.length - 1];
+        // A valid Colyseus roomId is alphanumeric + hyphens and not "index.html"
+        const roomId = (lastPart && lastPart !== 'index.html' && /^[a-zA-Z0-9_-]+$/.test(lastPart))
+            ? lastPart : null;
+
+        if (!roomId) return; // ← single-player, do nothing
+
+        // Student/player view: hide controls that only make sense in singleplayer
+        ['settings-btn', 'input-panel', 'stats-panel'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
+
+        // ── Status banner ─────────────────────────────────────────────
+        const banner = document.createElement('div');
+        Object.assign(banner.style, {
+            position: 'fixed', top: '10px', right: '10px', zIndex: '9999',
+            background: 'rgba(0,0,0,0.85)', color: '#0ff',
+            fontFamily: 'monospace', fontSize: '11px',
+            padding: '4px 10px', borderRadius: '4px',
+            border: '1px solid rgba(0,255,255,0.3)', pointerEvents: 'none',
+        });
+        banner.textContent = '⟳ Connecting...';
+        document.body.appendChild(banner);
+        const setBanner = (txt, color) => { banner.textContent = txt; banner.style.color = color || '#0ff'; };
+
+        // ── State ─────────────────────────────────────────────────────
+        let colyseusRoom        = null;
+        let myPlayerIndex       = -1;  // join-order index assigned by server
+        let myTeamIndex         = -1;  // playerIndex % teamCount, set on game_started
+        let currentPolytopePath = null;
+
+        function isMyTurn() { return GS && GS.activeTeam === myTeamIndex; }
+
+        // ── Apply server team colors into TEAMS[] ─────────────────────
+        function applyTeamColors(teamColors) {
+            if (!teamColors || !teamColors.length) return;
+            const mapped = teamColors.map(tc => {
+                const hex = '#' + ('000000' + tc.color.toString(16)).slice(-6);
+                const name = tc.displayName || (tc.name.charAt(0).toUpperCase() + tc.name.slice(1));
+                return { name, color: tc.color, css: hex };
+            });
+            TEAMS.splice(0, TEAMS.length, ...mapped);
+            while (TEAMS.length < 6) TEAMS.push({ ...TEAMS[TEAMS.length - 1] });
+        }
+
+        // ── Apply server config to the settings UI ────────────────────
+        function applyConfig(config) {
+            if (!config) return;
+            if (config.teamColors) applyTeamColors(config.teamColors);
+
+            function selOpt(id, val) {
+                const g = document.getElementById(id);
+                if (!g) return;
+                g.querySelectorAll('.opt-btn').forEach(b =>
+                    b.classList.toggle('sel', b.dataset.val === String(val)));
+            }
+            if (config.teamCount !== undefined) selOpt('opt-teams', config.teamCount);
+            if (config.wMode)                   selOpt('opt-wmode', config.wMode);
+            if (config.ownerMode)               selOpt('opt-owner', config.ownerMode);
+            if (config.victory)                 selOpt('opt-victory', config.victory);
+            if (config.claimsPerTurn)           selOpt('opt-claims', config.claimsPerTurn);
+            if (config.fogOfWar !== undefined)  selOpt('opt-fog', config.fogOfWar ? 'on' : 'off');
+            if (config.scoring) {
+                const w = config.scoring;
+                const preset = w[0] === 0 ? 'cells' : (w[1] === 1 && w[2] === 1 ? 'flat' : 'exponential');
+                selOpt('opt-scoring', preset);
+            }
+            // Refresh swatches
+            const swatchEl = document.getElementById('team-swatches');
+            if (swatchEl) {
+                const n = config.teamCount || 2;
+                swatchEl.innerHTML = TEAMS.slice(0, n)
+                    .map(t => `<div class="team-swatch" style="background:${t.css}" title="${t.name}"></div>`)
+                    .join('');
+            }
+        }
+
+        // ── Render a remote GS locally ────────────────────────────────
+        function renderRemoteGS(gs) {
+            if (!gs) return;
+            GS = gs;
+            try {
+                viewer.syncColors(GS.ownership, TEAMS);
+                viewer.animateToW(GS.wPlanes[GS.planeIdx]);
+                if (GS.activeTeam !== undefined) viewer.selectionColor = TEAMS[GS.activeTeam]?.color;
+            } catch (_) { /* polytope not yet loaded */ }
+            if (GS.phase === 'ended')         UI.showWin();
+            else if (GS.phase === 'choose-w') UI.showChooseW();
+            else if (GS.phase === 'vote')     UI.showVote();
+            else                              UI.hideActionPanel();
+            UI.update(); // also triggers updateTurnBar via the patched UI.update below
+        }
+
+        // ── Turn bar — shows all teams at top, highlights active team ─
+        function updateTurnBar() {
+            const bar = document.getElementById('c4d-turn-bar');
+            const chips = document.getElementById('c4d-team-chips');
+            if (!bar || !chips) return;
+            if (!GS) { bar.style.display = 'none'; return; }
+            bar.style.display = 'flex';
+            const n = GS.rules.teamCount;
+            chips.innerHTML = Array.from({ length: n }, (_, i) => {
+                const t  = TEAMS[i] || TEAMS[TEAMS.length - 1];
+                const sc = GS.score?.[i]?.total ?? 0;
+                const active = GS.activeTeam === i;
+                const mine   = i === myTeamIndex;
+                return `<div style="display:flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;\
+border:1.5px solid ${active ? t.css : 'rgba(255,255,255,0.08)'};\
+background:${active ? 'rgba(255,255,255,0.07)' : 'transparent'};\
+opacity:${active ? '1' : '0.4'};\
+${active ? `box-shadow:0 0 10px ${t.css}44;` : ''}transition:all .25s;">
+                    <span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${t.css};flex-shrink:0;${active ? `box-shadow:0 0 7px ${t.css};` : ''}"></span>
+                    <span style="color:${t.css};letter-spacing:.04em;">${t.name}</span>
+                    <span style="color:#666;font-size:11px;">${sc}</span>
+                    ${mine   ? `<span style="color:#fff;font-size:9px;opacity:.7;">(you)</span>` : ''}
+                    ${active && !mine ? `<span style="color:${t.css};font-size:9px;">← their turn</span>` : ''}
+                    ${active &&  mine ? `<span style="color:#fff;font-size:9px;font-weight:bold;">← your turn!</span>` : ''}
+                </div>`;
+            }).join('');
+        }
+
+        // Patch UI.update so turn bar always stays in sync
+        const _baseUIUpdate = UI.update.bind(UI);
+        UI.update = function () { _baseUIUpdate(); updateTurnBar(); };
+
+        // ── Sync GS to server (active player only) ────────────────────
+        function syncGS() {
+            if (!colyseusRoom || !isMyTurn() || !GS) return;
+            try {
+                colyseusRoom.send('state_sync', {
+                    gs: GS,
+                    phase: GS.phase === 'ended' ? 'finished' : 'playing',
+                });
+            } catch (e) { console.warn('[C4D MP] syncGS error', e); }
+        }
+
+        // ── Auto-load a polytope from path ────────────────────────────
+        async function loadPolytopePath(path) {
+            if (!path) return;
+            try {
+                const text = await fetch(path).then(r => r.text());
+                document.getElementById('text-input').value = text;
+                viewer.parseOFF(text);
+                viewer.rebuild();
+                currentPolytopePath = path;
+            } catch (e) { console.warn('[C4D MP] failed to load polytope', path, e); }
+        }
+
+        // Intercept fetch to track .off loads
+        const _origFetch = window.fetch;
+        window.fetch = async function (url, ...args) {
+            const result = await _origFetch(url, ...args);
+            if (typeof url === 'string' && url.includes('.off')) {
+                currentPolytopePath = url;
+            }
+            return result;
+        };
+
+        // ── Patch Game methods to sync after every action ─────────────
+        function patchGame() {
+            const _endTurn    = Game.endTurn.bind(Game);
+            const _chooseW    = Game.chooseW.bind(Game);
+            const _submitVote = Game.submitVote.bind(Game);
+
+            Game.endTurn = function () {
+                if (!isMyTurn()) return;
+                _endTurn();
+                syncGS();
+            };
+
+            Game.chooseW = function (planeIdx) {
+                if (!isMyTurn()) return;
+                _chooseW(planeIdx);
+                syncGS();
+            };
+
+            Game.submitVote = function (teamIdx, planeIdx) {
+                if (teamIdx !== myTeamIndex) return; // only vote on behalf of own team
+                _submitVote(teamIdx, planeIdx);
+                syncGS();
+            };
+
+            // Only active player can click
+            let _gcHandler = null;
+            Object.defineProperty(viewer, 'gameClickHandler', {
+                get() { return _gcHandler; },
+                set(fn) {
+                    _gcHandler = fn ? function (claim) {
+                        if (!isMyTurn()) return;
+                        fn(claim);
+                        syncGS();
+                    } : null;
+                },
+                configurable: true,
+            });
+        }
+
+        // ── Connect ───────────────────────────────────────────────────
+        const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+        const colyseusClient = new Colyseus.Client(`${protocol}://${window.location.host}`);
+
+        colyseusClient.joinById(roomId, { name: 'Player' }).then(room => {
+            colyseusRoom = room;
+            setBanner('● Connected', '#0f0');
+
+            room.onMessage('game_config', data => {
+                myPlayerIndex = data.playerIndex ?? myPlayerIndex;
+                applyConfig(data.config || {});
+                patchGame();
+                setBanner('● Connected — waiting for start', '#aaa');
+            });
+
+            room.onMessage('settings_update', data => {
+                applyConfig(data.config || {});
+                if (GS) viewer.syncColors(GS.ownership, TEAMS);
+            });
+
+            room.onMessage('polytope_select', async data => {
+                if (data.path) {
+                    await loadPolytopePath(data.path);
+                    if (GS) renderRemoteGS(GS);
+                }
+            });
+
+            room.onMessage('game_started', async data => {
+                applyConfig(data.config || {});
+                if (data.polytopePath) await loadPolytopePath(data.polytopePath);
+                if (data.gs) {
+                    const teamCount = data.gs.rules?.teamCount || 2;
+                    myTeamIndex = myPlayerIndex >= 0 ? myPlayerIndex % teamCount : -1;
+                    GS = data.gs;
+                    viewer.syncColors(GS.ownership, TEAMS);
+                    Game.startFromGS(data.config);  // sets up click handler + shows game UI
+                    updateTurnBar();
+                    const myTeam = TEAMS[myTeamIndex];
+                    setBanner(`● ${myTeam?.name || 'Player'} (you)`, myTeam?.css || '#0f0');
+                }
+            });
+
+            room.onMessage('state_update', data => {
+                if (data.gs) renderRemoteGS(data.gs);
+            });
+
+            room.onLeave(() => setBanner('✕ Disconnected', '#f44'));
+
+            // Late-join: request current state
+            setTimeout(() => {
+                try { room.send('request_state', {}); } catch (_) {}
+            }, 600);
+
+        }).catch(err => {
+            console.warn('[C4D MP] Connection failed:', err.message);
+            setBanner('⚠ Offline mode', '#888');
+            setTimeout(() => { banner.style.opacity = '0.4'; }, 3000);
+        });
+    })();
     </script>
 </body>
 </html>
