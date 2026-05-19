@@ -341,7 +341,7 @@
                     </div>
                     <div class="s-desc" id="fog-desc">Reference structure and completed-cell wireframes visible</div>
                 </div>
-                <div class="s-section" style="border:none">
+                <div class="s-section">
                     <div class="s-label">Claims per Turn</div>
                     <div class="s-opts" id="opt-claims">
                         <button class="opt-btn sel" data-val="1">1</button>
@@ -350,6 +350,17 @@
                     </div>
                     <div class="s-desc">Intersection dots claimable per player turn</div>
                 </div>
+                <div class="s-section" style="border:none">
+                    <div class="s-label">Rounds</div>
+                    <div class="s-opts" id="opt-rounds">
+                        <button class="opt-btn" data-val="3">3</button>
+                        <button class="opt-btn sel" data-val="5">5</button>
+                        <button class="opt-btn" data-val="10">10</button>
+                        <button class="opt-btn" data-val="0">∞</button>
+                    </div>
+                    <div class="s-desc" id="rounds-desc">Game lasts this many complete rounds (all teams take one turn = 1 round)</div>
+                </div>
+                <div id="session-estimate" style="margin:0 16px 12px;padding:8px 10px;background:rgba(255,255,255,0.04);border-radius:6px;font-family:monospace;font-size:11px;color:#aaa;line-height:1.6"></div>
                 <button id="start-game-btn">▶ Start Game</button>
             </div>
         </div>
@@ -1698,16 +1709,21 @@
             }
             if(state.rules.victory === 'last-plane') {
                 // Game ends when all W-planes have been visited at least once
+                // (rounds-limit end is handled separately in applyEndTurn)
                 if(Object.keys(state.visitedPlanes).length >= state.wPlanes.length) {
-                    let best=-1, bestScore=-1;
-                    for(let t=0;t<state.rules.teamCount;t++){
-                        const s=sc[t]?sc[t].total:0;
-                        if(s>bestScore){bestScore=s;best=t;}
-                    }
-                    return best;
+                    return _bestTeam(sc, state.rules.teamCount);
                 }
             }
             return null;
+        }
+
+        function _bestTeam(sc, teamCount) {
+            let best=-1, bestScore=-1;
+            for(let t=0;t<teamCount;t++){
+                const s=sc[t]?sc[t].total:0;
+                if(s>bestScore){bestScore=s;best=t;}
+            }
+            return best;
         }
 
         // ── Next W-plane index ──
@@ -1799,6 +1815,15 @@
             // Advance team
             let nextTeam = (s.activeTeam + 1) % s.rules.teamCount;
             let newRound = nextTeam === 0 ? s.round + 1 : s.round;
+
+            // Rounds limit: end after all teams complete the configured number of rounds
+            if(s.rules.rounds > 0 && nextTeam === 0 && newRound >= s.rules.rounds) {
+                const sc = computeScore(s, poly);
+                const best = _bestTeam(sc, s.rules.teamCount);
+                return {...s, score:sc, round:newRound, phase:'ended', winner:best,
+                    log:[...s.log.slice(-20), `${s.rules.rounds} rounds completed — game over!`]};
+            }
+
             let newPlaneIdx = s.planeIdx;
             let newSeqPos = s.seqPos;
             let newDir = s.wDirection;
@@ -1828,9 +1853,8 @@
                 if(skipped >= s.wPlanes.length) {
                     // Every plane is full → end game now
                     const sc = computeScore(s, poly);
-                    let best=-1, bestTot=-1;
-                    for(let t=0;t<s.rules.teamCount;t++){const tot=sc[t]?sc[t].total:0;if(tot>bestTot){bestTot=tot;best=t;}}
-                    return {...s, score:sc, phase:'ended', winner:best, log:[...s.log.slice(-20),'All spots claimed — game over!']};
+                    return {...s, score:sc, phase:'ended', winner:_bestTeam(sc, s.rules.teamCount),
+                        log:[...s.log.slice(-20),'All spots claimed — game over!']};
                 }
                 newPlaneIdx = checkIdx;
                 newDir = nextDirection({...s, planeIdx:newPlaneIdx}, newPlaneIdx);
@@ -2013,8 +2037,12 @@
                 const teams = Array.from({length:GS.rules.teamCount},(_,i)=>i)
                     .sort((a,b)=>(sc[b]?.total||0)-(sc[a]?.total||0));
                 const winner = teams[0];
+                const wcss = TEAMS[winner].css;
+                // Colorize win box with winner's color
+                el('win-box').style.borderTop    = `3px solid ${wcss}`;
+                el('win-box').style.background   = `linear-gradient(160deg, ${wcss}18 0%, #0a0a14 55%)`;
                 el('win-title').textContent = TEAMS[winner].name + ' Wins!';
-                el('win-title').style.color = TEAMS[winner].css;
+                el('win-title').style.color = wcss;
                 el('win-sub').textContent   = `Round ${GS.round} · ${GS.turn} turns`;
                 el('win-scores-list').innerHTML = teams.map((t,rank)=>`
                     <div class="win-team-row">
@@ -2142,7 +2170,7 @@
             const el = id => document.getElementById(id);
 
             // State of settings panel
-            const cfg = { teamCount:2, wMode:'oscillate', ownerMode:'permanent', scoring:'exponential', victory:'last-plane', claimsPerTurn:1, fogOfWar:false };
+            const cfg = { teamCount:2, wMode:'oscillate', ownerMode:'permanent', scoring:'exponential', victory:'last-plane', claimsPerTurn:1, fogOfWar:false, rounds:5 };
 
             // Option button groups
             function initGroup(groupId, onChange) {
@@ -2175,16 +2203,42 @@
                     : `✗ ${T} teams / ${N} planes share factor ${g} — some planes unreachable. Valid counts: ${validCounts.join(', ')}`;
             }
 
+            function updateEstimate() {
+                const est = el('session-estimate');
+                if (!est) return;
+                const T = cfg.teamCount;
+                const R = cfg.rounds;
+                const secBase  = 10;
+                const secExtra = cfg.wMode === 'vote' ? 15 : cfg.wMode === 'player-choice' ? 10 : 0;
+                const secTurn  = secBase + secExtra;
+                if (R === 0) {
+                    est.innerHTML = 'Duration: <b>open-ended</b> — ends when all W-planes visited';
+                    return;
+                }
+                const totalTurns = R * T;
+                const totalSec   = totalTurns * secTurn;
+                const mins = Math.floor(totalSec / 60), secs = totalSec % 60;
+                const timeStr = totalSec < 60 ? `~${totalSec}s`
+                              : secs === 0    ? `~${mins} min`
+                              :                 `~${mins}m ${secs}s`;
+                const breakdown = secExtra > 0
+                    ? `${R} rounds × ${T} teams × (${secBase}s + ${secExtra}s W) = ${totalSec}s`
+                    : `${R} rounds × ${T} teams × ${secBase}s/turn = ${totalSec}s`;
+                est.innerHTML = `Est. <b style="color:#e0e0e0;font-size:13px">${timeStr}</b><br><span style="color:#555">${breakdown}</span>`;
+            }
+
             initGroup('opt-teams', v => {
                 cfg.teamCount = Number(v);
                 updateSwatches();
                 updateStartBtn();
                 updateSequentialHint();
+                updateEstimate();
             });
             initGroup('opt-wmode', v => {
                 cfg.wMode = v;
                 el('wmode-desc').textContent = WMODE_DESC[v];
                 updateSequentialHint();
+                updateEstimate();
             });
             initGroup('opt-owner', v => {
                 cfg.ownerMode = v;
@@ -2213,6 +2267,13 @@
                     ? 'Reference structure and completed-cell wireframes hidden'
                     : 'Reference structure and completed-cell wireframes visible';
             });
+            initGroup('opt-rounds', v => {
+                cfg.rounds = Number(v);
+                el('rounds-desc').textContent = cfg.rounds === 0
+                    ? 'Game ends when all W-planes have been visited'
+                    : `${cfg.rounds} complete rounds · ${cfg.rounds * cfg.teamCount} total turns`;
+                updateEstimate();
+            });
 
             function updateSwatches() {
                 el('team-swatches').innerHTML = TEAMS.slice(0, cfg.teamCount)
@@ -2227,6 +2288,7 @@
             }
 
             updateSwatches();
+            updateEstimate();
 
             // Open/close
             el('settings-btn').onclick  = () => { el('settings-overlay').classList.add('open'); updateStartBtn(); };
@@ -2234,25 +2296,20 @@
             el('settings-overlay').onclick = e => { if(e.target===el('settings-overlay')) el('settings-overlay').classList.remove('open'); };
 
             // Start game
-            el('start-game-btn').onclick = () => {
+            function buildRules() {
                 const p = SCORING_PRESETS[cfg.scoring];
-                Game.start({
-                    teamCount:    cfg.teamCount,
-                    wMode:        cfg.wMode,
-                    ownerMode:    cfg.ownerMode,
-                    scoring:      p.weights,
-                    victory:      cfg.victory,
-                    claimsPerTurn:cfg.claimsPerTurn,
-                    fogOfWar:     cfg.fogOfWar,
-                });
-            };
+                return { teamCount:cfg.teamCount, wMode:cfg.wMode, ownerMode:cfg.ownerMode,
+                         scoring:p.weights, victory:cfg.victory, claimsPerTurn:cfg.claimsPerTurn,
+                         fogOfWar:cfg.fogOfWar, rounds:cfg.rounds };
+            }
+            el('start-game-btn').onclick = () => Game.start(buildRules());
 
             // End turn / quit buttons
             el('end-turn-btn').onclick = () => Game.endTurn();
             el('quit-btn').onclick     = () => { Game.quit(); };
 
             // Win screen buttons
-            el('play-again-btn').onclick    = () => { el('win-screen').classList.remove('visible'); Game.start({teamCount:cfg.teamCount,wMode:cfg.wMode,ownerMode:cfg.ownerMode,scoring:SCORING_PRESETS[cfg.scoring].weights,victory:cfg.victory,claimsPerTurn:cfg.claimsPerTurn,fogOfWar:cfg.fogOfWar}); };
+            el('play-again-btn').onclick    = () => { el('win-screen').classList.remove('visible'); Game.start(buildRules()); };
             el('new-settings-btn').onclick  = () => { el('win-screen').classList.remove('visible'); el('settings-overlay').classList.add('open'); GS=null; UI.showExplore(); };
         })();
 
