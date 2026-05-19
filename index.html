@@ -398,6 +398,7 @@
                 this.crossVertGeom = null;
                 this.crossEdgeGeom = null;
                 this.refVertGeom = null;
+                this.refVertMesh = null;
                 this.refEdgeGeom = null;
                 this.refEdgeMesh = null;
                 this.completedCellEdgeMesh = null;
@@ -886,6 +887,7 @@
                 this.fGroup.clear();
                 this.crossEdgeGeom = null;
                 this.crossFaceGeom = null;
+                this.refVertMesh = null;
                 this.refEdgeGeom = null;
                 this.refEdgeMesh = null;
                 this.completedCellEdgeGeom = null;
@@ -980,7 +982,9 @@
                 this.refVertGeom = new THREE.BufferGeometry();
                 this.refVertGeom.setAttribute('position', new THREE.BufferAttribute(new Float32Array(this.verts.length * 3), 3));
                 this.refVertGeom.setAttribute('color', new THREE.BufferAttribute(new Float32Array(this.verts.length * 3), 3));
-                this.vGroup.add(new THREE.Points(this.refVertGeom, new THREE.PointsMaterial({size:4, vertexColors:true, sizeAttenuation:false, transparent:true, opacity:0.4})));
+                this.refVertMesh = new THREE.Points(this.refVertGeom, new THREE.PointsMaterial({size:4, vertexColors:true, sizeAttenuation:false, transparent:true, opacity:0.4}));
+                this.refVertMesh.visible = !this.fogOfWar;
+                this.vGroup.add(this.refVertMesh);
 
                 // Single LineSegments for all reference edges
                 this.refEdgeGeom = new THREE.BufferGeometry();
@@ -1004,6 +1008,7 @@
 
             setFogOfWar(enabled) {
                 this.fogOfWar = enabled;
+                if(this.refVertMesh) this.refVertMesh.visible = !enabled;
                 if(this.refEdgeMesh) this.refEdgeMesh.visible = !enabled;
                 if(this.completedCellEdgeMesh) this.completedCellEdgeMesh.visible = !enabled;
             }
