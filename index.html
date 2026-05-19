@@ -294,11 +294,13 @@
                     <div class="s-label">W-Plane Mode</div>
                     <div class="s-opts" id="opt-wmode">
                         <button class="opt-btn sel" data-val="oscillate">Oscillate</button>
+                        <button class="opt-btn" data-val="sequential">Sequential</button>
                         <button class="opt-btn" data-val="random">Random</button>
                         <button class="opt-btn" data-val="player-choice">Choice</button>
                         <button class="opt-btn" data-val="vote">Vote</button>
                     </div>
                     <div class="s-desc" id="wmode-desc">W advances +1 plane each round</div>
+                    <div id="sequential-hint" style="display:none;margin-top:5px;font-size:10px;padding:4px 8px;border-radius:4px;"></div>
                 </div>
                 <div class="s-section">
                     <div class="s-label">Ownership</div>
@@ -1597,6 +1599,7 @@
 
         const WMODE_DESC = {
             'oscillate':    'W bounces back and forth across planes',
+            'sequential':   'W starts at center plane, advances right each turn. Teams must be coprime with plane count.',
             'random':       'W jumps to a random plane each round (pre-seeded)',
             'player-choice':'Active player picks which W-plane to visit',
             'vote':         'All players secretly vote — majority decides (ties: random)',
@@ -1625,26 +1628,30 @@
             const seq = wPlanes.map((_,i)=>i);
             for(let i=seq.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[seq[i],seq[j]]=[seq[j],seq[i]];}
             const firstTeam = Math.floor(rng() * rules.teamCount);
+            // Sequential: start at center plane (leftmost of the two middle if even count)
+            const startIdx = rules.wMode === 'sequential'
+                ? Math.floor((wPlanes.length - 1) / 2)
+                : 0;
             return {
                 rules,
                 seed,
                 wPlanes,
-                turn: 0,           // total turns taken
-                round: 0,          // completed rounds (all teams went once)
-                planeIdx: 0,
+                turn: 0,
+                round: 0,
+                planeIdx: startIdx,
                 wDirection: 1,
                 activeTeam: firstTeam,
-                phase: 'claim',    // claim | choose-w | vote | resolution | ended
-                votes: {},         // teamIdx → planeIdx
+                phase: 'claim',
+                votes: {},
                 votesIn: 0,
-                ownership: {},     // vertexIdx → teamIdx
-                contested: {},     // vertexIdx → challengerTeamIdx
+                ownership: {},
+                contested: {},
                 claimsThisTurn: 0,
                 score: {},
                 winner: null,
                 seqPos: 0,
                 randomSeq: seq,
-                visitedPlanes: {0: true}, // planeIdx → true
+                visitedPlanes: {[startIdx]: true},
                 log: [],
             };
         }
@@ -1712,6 +1719,7 @@
                     if(nx >= n || nx < 0) nx = state.planeIdx - state.wDirection;
                     return Math.max(0, Math.min(n-1, nx));
                 }
+                case 'sequential': return (state.planeIdx + 1) % n;
                 case 'random':   return state.randomSeq[state.seqPos % state.randomSeq.length];
                 case 'player-choice': return playerChoice;
                 case 'vote':     return resolveVotes(state);
@@ -2147,14 +2155,36 @@
                 });
             }
 
+            function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
+            function updateSequentialHint() {
+                const hint = el('sequential-hint');
+                if (!hint) return;
+                if (cfg.wMode !== 'sequential') { hint.style.display = 'none'; return; }
+                const N = viewer.getPolytopeData()?.wPlanes?.length || 0;
+                if (!N) { hint.style.display = 'none'; return; }
+                const T = cfg.teamCount;
+                const g = gcd(T, N);
+                const valid = g === 1;
+                const validCounts = [2,3,4,5,6].filter(t => gcd(t, N) === 1);
+                hint.style.display = '';
+                hint.style.background = valid ? 'rgba(22,163,74,0.15)' : 'rgba(220,38,38,0.15)';
+                hint.style.color = valid ? '#4ade80' : '#f87171';
+                hint.style.border = `1px solid ${valid ? 'rgba(74,222,128,0.3)' : 'rgba(248,113,113,0.3)'}`;
+                hint.textContent = valid
+                    ? `✓ ${T} teams × ${N} planes — all planes reachable by every team`
+                    : `✗ ${T} teams / ${N} planes share factor ${g} — some planes unreachable. Valid counts: ${validCounts.join(', ')}`;
+            }
+
             initGroup('opt-teams', v => {
                 cfg.teamCount = Number(v);
                 updateSwatches();
                 updateStartBtn();
+                updateSequentialHint();
             });
             initGroup('opt-wmode', v => {
                 cfg.wMode = v;
                 el('wmode-desc').textContent = WMODE_DESC[v];
+                updateSequentialHint();
             });
             initGroup('opt-owner', v => {
                 cfg.ownerMode = v;
@@ -2381,6 +2411,15 @@
                     try {
                         window.parent.postMessage({ type: 'c4d_polytope_selected', path: url }, '*');
                     } catch (_) {}
+                    // Post w-plane count after viewer finishes parsing (async)
+                    setTimeout(() => {
+                        try {
+                            const pd = viewer.getPolytopeData();
+                            if (pd?.wPlanes?.length) {
+                                window.parent.postMessage({ type: 'c4d_wplane_count', count: pd.wPlanes.length }, '*');
+                            }
+                        } catch (_) {}
+                    }, 300);
                 }
                 return result;
             };
