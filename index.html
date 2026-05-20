@@ -2701,13 +2701,24 @@ ${active ? `box-shadow:0 0 10px ${t.css}44;` : ''}transition:all .25s;">
             }).join('');
         }
 
-        // Patch UI.update so turn bar always stays in sync
+        // Patch UI.update so turn bar + interaction block stay in sync
+        let _blockOverlayRef = null; // set by patchGame once overlay is created
         const _baseUIUpdate = UI.update.bind(UI);
-        UI.update = function () { _baseUIUpdate(); updateTurnBar(); };
+        UI.update = function () {
+            _baseUIUpdate();
+            updateTurnBar();
+            if (_blockOverlayRef) {
+                _blockOverlayRef.style.pointerEvents = isMyTurn() ? 'none' : 'all';
+                if (!isMyTurn() && viewer.selectedInter) {
+                    viewer.selectedInter = null;
+                    try { viewer.updateHighlight(); } catch (_) {}
+                }
+            }
+        };
 
         // ── Sync GS to server (active player only) ────────────────────
-        function syncGS() {
-            if (!colyseusRoom || !isMyTurn() || !GS) return;
+        function syncGS(force = false) {
+            if (!colyseusRoom || (!force && !isMyTurn()) || !GS) return;
             try {
                 colyseusRoom.send('state_sync', {
                     gs: GS,
@@ -2749,22 +2760,22 @@ ${active ? `box-shadow:0 0 10px ${t.css}44;` : ''}transition:all .25s;">
             Game.endTurn = function () {
                 if (!isMyTurn()) return;
                 _endTurn();
-                syncGS();
+                syncGS(true); // force=true: GS.activeTeam already changed, bypass isMyTurn check
             };
 
             Game.chooseW = function (planeIdx) {
                 if (!isMyTurn()) return;
                 _chooseW(planeIdx);
-                syncGS();
+                syncGS(true);
             };
 
             Game.submitVote = function (teamIdx, planeIdx) {
-                if (teamIdx !== myTeamIndex) return; // only vote on behalf of own team
+                if (teamIdx !== myTeamIndex) return;
                 _submitVote(teamIdx, planeIdx);
                 syncGS();
             };
 
-            // Only active player can click or hover
+            // Only active player can click
             let _gcHandler = null;
             Object.defineProperty(viewer, 'gameClickHandler', {
                 get() { return _gcHandler; },
@@ -2778,21 +2789,16 @@ ${active ? `box-shadow:0 0 10px ${t.css}44;` : ''}transition:all .25s;">
                 configurable: true,
             });
 
-            // Block hover highlight and W-dot selection when not the active player
+            // Transparent overlay absorbs all pointer events when not our turn,
+            // preventing the viewer from receiving hover or click input entirely.
             const canvas = document.getElementById('canvas');
-            const origMousemove = canvas.onmousemove;
-            canvas.onmousemove = function (e) {
-                if (!isMyTurn() && viewer.selectedInter) {
-                    viewer.selectedInter = null;
-                    try { viewer.updateHighlight(); } catch (_) {}
-                }
-                if (origMousemove) origMousemove.call(this, e);
-            };
-            const origClick = canvas.onclick;
-            canvas.onclick = function (e) {
-                if (!isMyTurn() && !viewer.selectedInter) return; // block step-1 dot select
-                if (origClick) origClick.call(this, e);
-            };
+            const _blockOverlay = document.createElement('div');
+            Object.assign(_blockOverlay.style, {
+                position: 'absolute', inset: '0', zIndex: '5', pointerEvents: 'none',
+            });
+            (canvas.parentElement || document.getElementById('container')).appendChild(_blockOverlay);
+            _blockOverlayRef = _blockOverlay; // wire into UI.update patch above
+            UI.update(); // run once immediately to set initial state
 
             // Sync W-slider position to all clients when the active player releases the slider
             const wSlider = document.getElementById('w-slider');
