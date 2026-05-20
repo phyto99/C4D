@@ -119,18 +119,17 @@
         .team-swatch{width:18px;height:18px;border-radius:3px;border:2px solid transparent;cursor:default}
         .team-swatch.active-swatch{border-color:white}
 
-        /* ─── GAME OVERLAY (bottom-left of scoreboard) ─── */
-        #game-bar{position:absolute;bottom:10px;right:250px;width:190px;background:rgba(0,0,0,0.88);border-radius:8px;z-index:99;display:none;flex-direction:column;border:1px solid rgba(255,255,255,0.07);overflow:hidden;font-family:monospace;font-size:11px}
+        /* ─── GAME OVERLAY (full-width bar stack at bottom) ─── */
+        #c4d-turn-bar{position:absolute;bottom:0;left:0;right:0;height:34px;background:rgba(0,0,0,0.88);border-top:1px solid rgba(255,255,255,0.07);z-index:150;display:none;align-items:center;justify-content:center;padding:0 16px;gap:8px;font-family:monospace;font-size:12px;pointer-events:none}
+        #game-bar{position:absolute;bottom:34px;left:0;right:0;background:rgba(0,0,0,0.85);z-index:99;display:none;flex-direction:column;border-top:1px solid rgba(255,255,255,0.06);font-family:monospace}
         #game-bar.visible{display:flex}
-        #player-team-row{display:none;padding:5px 10px;background:rgba(255,255,255,0.04);border-bottom:1px solid #1a1a1a;font-size:10px;color:#666;align-items:center;gap:5px}
-        #player-team-row.visible{display:flex}
-        #player-team-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
-        #game-bar-active{padding:8px 10px;display:flex;align-items:center;gap:7px;border-bottom:1px solid #1a1a1a}
+        #bar-map-name{padding:3px 14px;font-size:10px;color:#555;border-bottom:1px solid #1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        #bar-controls{display:flex;align-items:center;height:38px;padding:0 14px;gap:10px}
         #active-dot{width:11px;height:11px;border-radius:50%;flex-shrink:0;box-shadow:0 0 7px currentColor}
         #active-name{font-size:12px;font-weight:700;flex-shrink:0}
-        #bar-middle{padding:5px 10px 2px}
-        #bar-status{color:#fff;font-size:11px;white-space:normal;letter-spacing:.02em;line-height:1.4}
-        #turn-info{padding:2px 10px 7px;font-size:10px;color:#555}
+        #bar-middle{flex:1;display:flex;align-items:center;justify-content:center}
+        #bar-status{color:#fff;font-size:11px;white-space:nowrap;letter-spacing:.02em}
+        #turn-info{font-size:10px;color:#555;flex-shrink:0;white-space:nowrap}
         #w-dot-overlay{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);height:22px}
         .w-dot{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;transform:translate(-50%,-50%);transition:box-shadow .12s,transform .12s,background .12s}
         .w-dot-current{background:#fff;cursor:default;box-shadow:0 0 9px rgba(0,0,0,.8)}
@@ -139,10 +138,8 @@
         .w-dot-voted{background:#FF6B35;cursor:pointer;box-shadow:0 0 13px rgba(0,0,0,1);outline:2px solid rgba(0,0,0,.55);outline-offset:2px}
         .w-dot-dim{background:rgba(255,107,53,.32);cursor:pointer}
         .w-dot-dim:hover{background:rgba(255,107,53,.68);box-shadow:0 0 7px rgba(0,0,0,.7)}
-        #turn-info{font-size:10px;color:#666;flex-shrink:0;white-space:nowrap}
-
         /* ─── GAME SCORE PANEL ─── */
-        #game-panel{position:absolute;bottom:10px;right:10px;width:230px;background:rgba(0,0,0,0.9);border:1px solid #222;border-radius:8px;z-index:100;display:none;flex-direction:column;overflow:hidden}
+        #game-panel{position:absolute;bottom:84px;right:10px;width:230px;background:rgba(0,0,0,0.9);border:1px solid #222;border-radius:8px;z-index:100;display:none;flex-direction:column;overflow:hidden}
         #game-panel.visible{display:flex}
         #game-panel-head{padding:6px 10px;background:#18181e;font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.8px;border-bottom:1px solid #222}
         .gteam-row{display:flex;align-items:center;gap:7px;padding:5px 10px;border-bottom:1px solid #1a1a1a;transition:background .15s}
@@ -166,7 +163,7 @@
         .log-entry{padding:1px 0;border-bottom:1px solid #1a1a1a;line-height:1.5}
 
         /* ─── VOTE / CHOICE PANEL ─── */
-        #action-panel{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(10,10,18,0.97);border:1px solid #2a2a3a;border-radius:8px;z-index:200;display:none;flex-direction:column;min-width:340px;max-width:520px}
+        #action-panel{position:absolute;bottom:84px;left:50%;transform:translateX(-50%);background:rgba(10,10,18,0.97);border:1px solid #2a2a3a;border-radius:8px;z-index:200;display:none;flex-direction:column;min-width:340px;max-width:520px}
         #action-panel.visible{display:flex}
         #action-panel-head{padding:8px 14px;background:#18181e;border-bottom:1px solid #222;font-size:11px;color:#bbb;font-weight:600;display:flex;align-items:center;gap:8px}
         #action-panel-sub{font-size:9px;color:#555;flex:1}
@@ -214,26 +211,20 @@
         <!-- Shape title -->
         <div id="shape-title"></div>
 
-        <!-- Multiplayer team chips — transparent strip directly under slider -->
-        <div id="c4d-turn-bar" style="display:none;position:absolute;top:70px;left:10px;right:10px;z-index:150;padding:4px 12px;background:transparent;align-items:center;justify-content:center;gap:8px;font-family:monospace;font-size:12px;pointer-events:none;">
-            <div id="c4d-team-chips" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;"></div>
-        </div>
-
-        <!-- Game bar — bottom-left of scoreboard, visible during game -->
+        <!-- Game bar — full-width stack just above chips bar, visible during game -->
         <div id="game-bar">
-            <div id="player-team-row">
-                <div id="player-team-dot"></div>
-                <span>You:&nbsp;</span>
-                <span id="player-team-name"></span>
-            </div>
-            <div id="game-bar-active">
+            <div id="bar-map-name"></div>
+            <div id="bar-controls">
                 <div id="active-dot"></div>
                 <span id="active-name"></span>
+                <div id="bar-middle"><span id="bar-status"></span></div>
+                <span id="turn-info"></span>
             </div>
-            <div id="bar-middle">
-                <span id="bar-status"></span>
-            </div>
-            <span id="turn-info"></span>
+        </div>
+
+        <!-- Multiplayer team chips — full-width bar at very bottom -->
+        <div id="c4d-turn-bar">
+            <div id="c4d-team-chips" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;"></div>
         </div>
 
         <!-- Library sidebar -->
@@ -2121,42 +2112,28 @@
 
             function update() {
                 if(!GS) return;
-                const team = TEAMS[GS.activeTeam];
-                el('active-dot').style.background  = team.css;
-                el('active-dot').style.boxShadow   = `0 0 8px ${team.css}`;
-                el('active-name').textContent       = team.name;
-                el('active-name').style.color       = team.css;
-                el('turn-info').textContent         = `Turn ${GS.turn+1} · Round ${GS.round+1}`;
+                const activeTeam = TEAMS[GS.activeTeam];
+                const myTeamIdx  = window._c4dMyTeamIdx ?? -1;
+                // In MP: dot/name = YOUR fixed team. In SP: dot/name = active team.
+                const displayTeam = myTeamIdx >= 0 ? (TEAMS[myTeamIdx] || activeTeam) : activeTeam;
+                el('active-dot').style.background = displayTeam.css;
+                el('active-dot').style.boxShadow  = `0 0 8px ${displayTeam.css}`;
+                el('active-name').textContent      = displayTeam.name;
+                el('active-name').style.color      = displayTeam.css;
+                el('turn-info').textContent        = `Turn ${GS.turn+1} · Round ${GS.round+1}`;
 
-                // Player team indicator row (MP only)
-                const myTeamIdx = window._c4dMyTeamIdx ?? -1;
-                const myTeam    = myTeamIdx >= 0 ? TEAMS[myTeamIdx] : null;
-                const pRow = el('player-team-row');
-                if (myTeam) {
-                    pRow.classList.add('visible');
-                    el('player-team-dot').style.background = myTeam.css;
-                    el('player-team-name').textContent     = myTeam.name;
-                } else {
-                    pRow.classList.remove('visible');
-                }
-
-                // Status text — show "Waiting for X" when it's not the local player's turn
+                // Status: "Waiting for X" when it's not the local player's turn (MP)
                 const status    = el('bar-status');
                 const notMyTurn = myTeamIdx >= 0 && GS.activeTeam !== myTeamIdx;
-                const atName    = team.name;
+                const atName    = activeTeam.name;
                 if (GS.phase === 'claim') {
-                    if (notMyTurn) {
-                        status.textContent = `Waiting for ${atName} to claim`;
-                    } else {
-                        const c = GS.claimsThisTurn, m = GS.rules.claimsPerTurn;
-                        status.textContent = `Claim  ${c} / ${m}`;
-                    }
+                    status.textContent = notMyTurn
+                        ? `Waiting for ${atName} to claim`
+                        : `Claim  ${GS.claimsThisTurn} / ${GS.rules.claimsPerTurn}`;
                 } else if (GS.phase === 'choose-w') {
-                    if (notMyTurn) {
-                        status.textContent = `Waiting for ${atName} to select W`;
-                    } else {
-                        status.textContent = 'Choose W — click a dot above';
-                    }
+                    status.textContent = notMyTurn
+                        ? `Waiting for ${atName} to select W`
+                        : 'Choose W — click a dot on the slider';
                 } else if (GS.phase === 'vote') {
                     const voted = Object.keys(GS.votes || {}).length;
                     status.textContent = `Vote  ${voted} / ${GS.rules.teamCount}`;
@@ -2473,6 +2450,8 @@
                     titleEl.classList.add('visible');
                     clearTimeout(titleEl._timer);
                     titleEl._timer = setTimeout(() => titleEl.classList.remove('visible'), 3000);
+                    const _bmn = document.getElementById('bar-map-name');
+                    if (_bmn) _bmn.textContent = s.name;
                 } catch(e) {
                     console.error('Failed to load', s.name, e);
                 } finally {
@@ -2601,19 +2580,11 @@
             if (el) el.style.display = 'none';
         });
 
-        // ── Map name label (bottom-left) ──────────────────────────────
-        const mapNameEl = document.createElement('div');
-        Object.assign(mapNameEl.style, {
-            position: 'fixed', bottom: '12px', left: '16px', zIndex: '9999',
-            color: '#fff', fontFamily: 'monospace', fontSize: '13px',
-            pointerEvents: 'none', opacity: '0.7', letterSpacing: '0.03em',
-        });
-        document.body.appendChild(mapNameEl);
-
         function setMapName(path) {
             if (!path) return;
             const raw = path.split('/').pop().replace(/\.off$/i, '');
-            mapNameEl.textContent = raw.replace(/[-_]/g, ' ');
+            const label = document.getElementById('bar-map-name');
+            if (label) label.textContent = raw.replace(/[-_]/g, ' ');
         }
 
         // ── Status banner ─────────────────────────────────────────────
