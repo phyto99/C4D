@@ -83,7 +83,7 @@
         .magenta{color:#FF00FF}
         .lime{color:#00FF00}
 
-        #instructions{position:absolute;bottom:10px;left:10px;background:rgba(0,0,0,0.8);padding:8px 10px;border-radius:4px;font-size:11px;z-index:100;max-width:260px}
+        #instructions{position:absolute;top:68px;left:10px;background:rgba(0,0,0,0.8);padding:8px 10px;border-radius:4px;font-size:11px;z-index:100;max-width:260px}
         #shape-title{position:absolute;top:70px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.7);padding:4px 14px;border-radius:4px;font-size:13px;z-index:100;pointer-events:none;opacity:0;transition:opacity 0.3s}
         #shape-title.visible{opacity:1}
 
@@ -121,17 +121,16 @@
 
         /* ─── GAME OVERLAY ─── */
         #c4d-turn-bar{position:absolute;top:70px;left:0;right:0;height:28px;background:transparent;z-index:150;display:none;align-items:center;justify-content:center;padding:0 16px;gap:8px;font-family:monospace;font-size:12px;pointer-events:none}
-        #game-bar{position:absolute;bottom:0;left:0;right:0;height:3px;background:rgba(255,255,255,0.04);z-index:99;display:none;border-top:1px solid rgba(255,255,255,0.05)}
-        #game-bar.visible{display:block}
-        #bar-map-name{position:absolute;top:66px;left:14px;font-size:10px;color:#888;background:transparent;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;z-index:98;display:none}
+        #game-bar{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.85);z-index:99;display:none;flex-direction:column;border-top:1px solid rgba(255,255,255,0.06);font-family:monospace}
+        #game-bar.visible{display:flex}
+        #bar-map-name{position:absolute;bottom:46px;left:0;right:0;padding:2px 14px;font-size:22px;color:#fff;background:transparent;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;z-index:98;display:none}
         #bar-map-name.visible{display:block}
-        #bar-controls{position:absolute;top:104px;left:14px;display:none;flex-direction:column;gap:4px;pointer-events:none;z-index:98;font-family:monospace}
-        #bar-controls.visible{display:flex}
-        #active-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;display:inline-block;box-shadow:0 0 6px currentColor;vertical-align:middle;margin-right:6px}
-        #active-name{font-size:12px;font-weight:700;color:#fff;vertical-align:middle}
-        #bar-middle{display:inline}
-        #bar-status{color:#ccc;font-size:11px;letter-spacing:.02em}
-        #turn-info{font-size:10px;color:#555}
+        #bar-controls{display:flex;align-items:center;height:38px;padding:0 14px;gap:10px}
+        #active-dot{width:11px;height:11px;border-radius:50%;flex-shrink:0;box-shadow:0 0 7px currentColor}
+        #active-name{font-size:12px;font-weight:700;flex-shrink:0}
+        #bar-middle{flex:1;display:flex;align-items:center;justify-content:center}
+        #bar-status{color:#fff;font-size:11px;white-space:nowrap;letter-spacing:.02em}
+        #turn-info{font-size:10px;color:#555;flex-shrink:0;white-space:nowrap}
         #w-dot-overlay{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);height:22px}
         .w-dot{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;transform:translate(-50%,-50%);transition:box-shadow .12s,transform .12s,background .12s}
         .w-dot-current{background:#fff;cursor:default;box-shadow:0 0 9px rgba(0,0,0,.8)}
@@ -141,7 +140,7 @@
         .w-dot-dim{background:rgba(255,107,53,.32);cursor:pointer}
         .w-dot-dim:hover{background:rgba(255,107,53,.68);box-shadow:0 0 7px rgba(0,0,0,.7)}
         /* ─── GAME SCORE PANEL ─── */
-        #game-panel{position:absolute;bottom:84px;right:10px;width:230px;background:rgba(0,0,0,0.9);border:1px solid #222;border-radius:8px;z-index:100;display:none;flex-direction:column;overflow:hidden}
+        #game-panel{position:absolute;bottom:42px;right:10px;width:230px;background:rgba(0,0,0,0.9);border:1px solid #222;border-radius:8px;z-index:100;display:none;flex-direction:column;overflow:hidden}
         #game-panel.visible{display:flex}
         #game-panel-head{padding:6px 10px;background:#18181e;font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.8px;border-bottom:1px solid #222}
         .gteam-row{display:flex;align-items:center;gap:7px;padding:5px 10px;border-bottom:1px solid #1a1a1a;transition:background .15s}
@@ -163,7 +162,7 @@
         .log-entry{padding:1px 0;border-bottom:1px solid #1a1a1a;line-height:1.5}
 
         /* ─── VOTE / CHOICE PANEL ─── */
-        #action-panel{position:absolute;bottom:84px;left:50%;transform:translateX(-50%);background:rgba(10,10,18,0.97);border:1px solid #2a2a3a;border-radius:8px;z-index:200;display:none;flex-direction:column;min-width:340px;max-width:520px}
+        #action-panel{position:absolute;bottom:42px;left:50%;transform:translateX(-50%);background:rgba(10,10,18,0.97);border:1px solid #2a2a3a;border-radius:8px;z-index:200;display:none;flex-direction:column;min-width:340px;max-width:520px}
         #action-panel.visible{display:flex}
         #action-panel-head{padding:8px 14px;background:#18181e;border-bottom:1px solid #222;font-size:11px;color:#bbb;font-weight:600;display:flex;align-items:center;gap:8px}
         #action-panel-sub{font-size:9px;color:#555;flex:1}
@@ -211,20 +210,20 @@
         <!-- Shape title -->
         <div id="shape-title"></div>
 
-        <!-- Shape name — top-left, transparent, between slider and controls -->
+        <!-- Shape name — floats above game bar -->
         <div id="bar-map-name"></div>
 
-        <!-- Controls — top-left, below slider bar, each item on its own line -->
-        <div id="bar-controls">
-            <div><span id="active-dot"></span><span id="active-name"></span></div>
-            <div><span id="bar-status"></span></div>
-            <div><span id="turn-info"></span></div>
+        <!-- Game bar — full-width dark bar at bottom -->
+        <div id="game-bar">
+            <div id="bar-controls">
+                <div id="active-dot"></div>
+                <span id="active-name"></span>
+                <div id="bar-middle"><span id="bar-status"></span></div>
+                <span id="turn-info"></span>
+            </div>
         </div>
 
-        <!-- Thin accent line at bottom -->
-        <div id="game-bar"></div>
-
-        <!-- Multiplayer team chips — full-width bar at very bottom -->
+        <!-- Multiplayer team chips — transparent strip at top, under slider -->
         <div id="c4d-turn-bar">
             <div id="c4d-team-chips" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;"></div>
         </div>
@@ -2022,7 +2021,9 @@
                 el('input-panel').style.display   = 'none';
                 el('game-panel').classList.add('visible');
                 el('game-bar').classList.add('visible');
-                el('bar-map-name').classList.add('visible');
+                const bmn = el('bar-map-name');
+                bmn.style.fontSize = ''; bmn.style.color = ''; bmn.style.fontWeight = '';
+                bmn.classList.add('visible');
                 el('bar-controls').classList.add('visible');
                 el('settings-overlay').classList.remove('open');
                 el('win-screen').classList.remove('visible');
@@ -2051,6 +2052,15 @@
                 el('win-box').style.background   = `linear-gradient(160deg, ${wcss}18 0%, #0a0a14 55%)`;
                 el('win-title').textContent = TEAMS[winner].name + ' Wins!';
                 el('win-title').style.color = wcss;
+                // Bottom-left win announcement replaces map name
+                const bmn = el('bar-map-name');
+                if (bmn) {
+                    bmn.style.fontSize = '44px';
+                    bmn.style.color = wcss;
+                    bmn.style.fontWeight = '700';
+                    bmn.textContent = TEAMS[winner].name + ' Wins!';
+                    bmn.classList.add('visible');
+                }
                 el('win-sub').textContent   = `Round ${GS.round} · ${GS.turn} turns`;
                 el('win-scores-list').innerHTML = teams.map((t,rank)=>`
                     <div class="win-team-row">
@@ -2125,7 +2135,9 @@
                 el('active-dot').style.boxShadow  = `0 0 8px ${displayTeam.css}`;
                 el('active-name').textContent      = displayTeam.name;
                 el('active-name').style.color      = displayTeam.css;
-                el('turn-info').textContent        = `Turn ${GS.turn+1} · Round ${GS.round+1}`;
+                const _wSlice = GS.wPlanes?.length ? `${GS.planeIdx + 1}/${GS.wPlanes.length}` : '?';
+                const _maxR = GS.rules?.rounds > 0 ? `/${GS.rules.rounds}` : '';
+                el('turn-info').innerHTML = `Round ${GS.round+1}${_maxR} · Turn ${GS.turn+1} · <span style="color:#c87a3a">W ${_wSlice}</span>`;
 
                 // Status: "Waiting for X" when it's not the local player's turn (MP)
                 const status    = el('bar-status');
@@ -2683,17 +2695,17 @@
             UI.update(); // also triggers updateTurnBar via the patched UI.update below
         }
 
-        // ── Turn bar — shows all teams at top, highlights active team ─
+        // ── Turn bar — transparent strip at top showing team chips ─
         function updateTurnBar() {
-            const bar = document.getElementById('c4d-turn-bar');
+            const bar   = document.getElementById('c4d-turn-bar');
             const chips = document.getElementById('c4d-team-chips');
             if (!bar || !chips) return;
             if (!GS) { bar.style.display = 'none'; return; }
             bar.style.display = 'flex';
             const n = GS.rules.teamCount;
             chips.innerHTML = Array.from({ length: n }, (_, i) => {
-                const t  = TEAMS[i] || TEAMS[TEAMS.length - 1];
-                const sc = GS.score?.[i]?.total ?? 0;
+                const t      = TEAMS[i] || TEAMS[TEAMS.length - 1];
+                const sc     = GS.score?.[i]?.total ?? 0;
                 const active = GS.activeTeam === i;
                 const mine   = i === myTeamIndex;
                 return `<div style="display:flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;\
@@ -2794,14 +2806,11 @@ ${active ? `box-shadow:0 0 10px ${t.css}44;` : ''}transition:all .25s;">
             if (_vc) {
                 const _origMM = _vc.onmousemove;
                 _vc.onmousemove = function (e) {
-                    if (!isMyTurn()) {
-                        if (viewer.selectedInter) {
-                            viewer.selectedInter = null;
-                            try { viewer.updateHighlight(); } catch (_) {}
-                        }
-                        return;
-                    }
                     if (_origMM) _origMM.call(this, e);
+                    if (!isMyTurn() && viewer.selectedInter) {
+                        viewer.selectedInter = null;
+                        try { viewer.updateHighlight(); } catch (_) {}
+                    }
                 };
                 const _origMD = _vc.onmousedown;
                 _vc.onmousedown = function (e) {
