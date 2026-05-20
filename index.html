@@ -121,15 +121,17 @@
 
         /* ─── GAME OVERLAY ─── */
         #c4d-turn-bar{position:absolute;top:70px;left:0;right:0;height:28px;background:transparent;z-index:150;display:none;align-items:center;justify-content:center;padding:0 16px;gap:8px;font-family:monospace;font-size:12px;pointer-events:none}
-        #game-bar{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.85);z-index:99;display:none;flex-direction:column;border-top:1px solid rgba(255,255,255,0.06);font-family:monospace}
-        #game-bar.visible{display:flex}
-        #bar-map-name{padding:3px 14px;font-size:10px;color:#555;border-bottom:1px solid #1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-        #bar-controls{display:flex;align-items:center;height:38px;padding:0 14px;gap:10px;pointer-events:none}
-        #active-dot{width:11px;height:11px;border-radius:50%;flex-shrink:0;box-shadow:0 0 7px currentColor}
-        #active-name{font-size:12px;font-weight:700;flex-shrink:0}
-        #bar-middle{flex:1;display:flex;align-items:center;justify-content:center}
-        #bar-status{color:#fff;font-size:11px;white-space:nowrap;letter-spacing:.02em}
-        #turn-info{font-size:10px;color:#555;flex-shrink:0;white-space:nowrap}
+        #game-bar{position:absolute;bottom:0;left:0;right:0;height:3px;background:rgba(255,255,255,0.04);z-index:99;display:none;border-top:1px solid rgba(255,255,255,0.05)}
+        #game-bar.visible{display:block}
+        #bar-map-name{position:absolute;top:66px;left:14px;font-size:10px;color:#888;background:transparent;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;z-index:98;display:none}
+        #bar-map-name.visible{display:block}
+        #bar-controls{position:absolute;top:104px;left:14px;display:none;flex-direction:column;gap:4px;pointer-events:none;z-index:98;font-family:monospace}
+        #bar-controls.visible{display:flex}
+        #active-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;display:inline-block;box-shadow:0 0 6px currentColor;vertical-align:middle;margin-right:6px}
+        #active-name{font-size:12px;font-weight:700;color:#fff;vertical-align:middle}
+        #bar-middle{display:inline}
+        #bar-status{color:#ccc;font-size:11px;letter-spacing:.02em}
+        #turn-info{font-size:10px;color:#555}
         #w-dot-overlay{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);height:22px}
         .w-dot{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;transform:translate(-50%,-50%);transition:box-shadow .12s,transform .12s,background .12s}
         .w-dot-current{background:#fff;cursor:default;box-shadow:0 0 9px rgba(0,0,0,.8)}
@@ -209,16 +211,18 @@
         <!-- Shape title -->
         <div id="shape-title"></div>
 
-        <!-- Dark bar at bottom: shape name row + controls row (dot | centered status | turn) -->
-        <div id="game-bar">
-            <div id="bar-map-name"></div>
-            <div id="bar-controls">
-                <div id="active-dot"></div>
-                <span id="active-name"></span>
-                <div id="bar-middle"><span id="bar-status"></span></div>
-                <span id="turn-info"></span>
-            </div>
+        <!-- Shape name — top-left, transparent, between slider and controls -->
+        <div id="bar-map-name"></div>
+
+        <!-- Controls — top-left, below slider bar, each item on its own line -->
+        <div id="bar-controls">
+            <div><span id="active-dot"></span><span id="active-name"></span></div>
+            <div><span id="bar-status"></span></div>
+            <div><span id="turn-info"></span></div>
         </div>
+
+        <!-- Thin accent line at bottom -->
+        <div id="game-bar"></div>
 
         <!-- Multiplayer team chips — full-width bar at very bottom -->
         <div id="c4d-turn-bar">
@@ -2701,20 +2705,9 @@ ${active ? `box-shadow:0 0 10px ${t.css}44;` : ''}transition:all .25s;">
             }).join('');
         }
 
-        // Patch UI.update so turn bar + interaction block stay in sync
-        let _blockOverlayRef = null; // set by patchGame once overlay is created
+        // Patch UI.update so turn bar stays in sync
         const _baseUIUpdate = UI.update.bind(UI);
-        UI.update = function () {
-            _baseUIUpdate();
-            updateTurnBar();
-            if (_blockOverlayRef) {
-                _blockOverlayRef.style.pointerEvents = isMyTurn() ? 'none' : 'all';
-                if (!isMyTurn() && viewer.selectedInter) {
-                    viewer.selectedInter = null;
-                    try { viewer.updateHighlight(); } catch (_) {}
-                }
-            }
-        };
+        UI.update = function () { _baseUIUpdate(); updateTurnBar(); };
 
         // ── Sync GS to server (active player only) ────────────────────
         function syncGS(force = false) {
@@ -2789,16 +2782,32 @@ ${active ? `box-shadow:0 0 10px ${t.css}44;` : ''}transition:all .25s;">
                 configurable: true,
             });
 
-            // Transparent overlay absorbs all pointer events when not our turn,
-            // preventing the viewer from receiving hover or click input entirely.
-            const canvas = document.getElementById('canvas');
-            const _blockOverlay = document.createElement('div');
-            Object.assign(_blockOverlay.style, {
-                position: 'absolute', inset: '0', zIndex: '5', pointerEvents: 'none',
-            });
-            (canvas.parentElement || document.getElementById('container')).appendChild(_blockOverlay);
-            _blockOverlayRef = _blockOverlay; // wire into UI.update patch above
-            UI.update(); // run once immediately to set initial state
+            // Patch the viewer's actual canvas handlers — viewer uses .onmousemove/.onclick
+            // property assignment so replacing the property fully intercepts input.
+            const _vc = viewer.renderer?.domElement || document.querySelector('#container canvas');
+            if (_vc) {
+                const _origMM = _vc.onmousemove;
+                _vc.onmousemove = function (e) {
+                    if (!isMyTurn()) {
+                        if (viewer.selectedInter) {
+                            viewer.selectedInter = null;
+                            try { viewer.updateHighlight(); } catch (_) {}
+                        }
+                        return;
+                    }
+                    if (_origMM) _origMM.call(this, e);
+                };
+                const _origMD = _vc.onmousedown;
+                _vc.onmousedown = function (e) {
+                    if (!isMyTurn() && e.button === 0) return;
+                    if (_origMD) _origMD.call(this, e);
+                };
+                const _origOC = _vc.onclick;
+                _vc.onclick = function (e) {
+                    if (!isMyTurn()) return;
+                    if (_origOC) _origOC.call(this, e);
+                };
+            }
 
             // Sync W-slider position to all clients when the active player releases the slider
             const wSlider = document.getElementById('w-slider');
