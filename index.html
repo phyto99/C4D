@@ -2830,9 +2830,12 @@ ${active ? `box-shadow:0 0 10px ${t.css}44;` : ''}transition:all .25s;">
             colyseusRoom = room;
             setBanner('● Connected', '#0f0');
 
+            let lastReceivedConfig = {};
+
             room.onMessage('game_config', data => {
                 myPlayerIndex = data.playerIndex ?? myPlayerIndex;
-                applyConfig(data.config || {});
+                lastReceivedConfig = data.config || {};
+                applyConfig(lastReceivedConfig);
                 patchGame();
                 setBanner('● Connected — waiting for start', '#aaa');
             });
@@ -2866,7 +2869,21 @@ ${active ? `box-shadow:0 0 10px ${t.css}44;` : ''}transition:all .25s;">
             });
 
             room.onMessage('state_update', data => {
-                if (data.gs) renderRemoteGS(data.gs);
+                if (!data.gs) return;
+                const isLateJoin = !GS && data.gs.phase !== 'ended';
+                if (isLateJoin) {
+                    const teamCount = data.gs.rules?.teamCount || 2;
+                    myTeamIndex = myPlayerIndex >= 0 ? myPlayerIndex % teamCount : -1;
+                    window._c4dMyTeamIdx = myTeamIndex;
+                    GS = data.gs;
+                    viewer.syncColors(GS.ownership, TEAMS);
+                    Game.startFromGS(lastReceivedConfig);
+                    const myTeam = TEAMS[myTeamIndex];
+                    setBanner(`● ${myTeam?.name || 'Player'} (you)`, myTeam?.css || '#0f0');
+                } else {
+                    renderRemoteGS(data.gs);
+                }
+                updateTurnBar();
             });
 
             room.onMessage('w_update', data => {
