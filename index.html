@@ -2486,12 +2486,18 @@
                     try {
                         window.parent.postMessage({ type: 'c4d_polytope_selected', path: url }, '*');
                     } catch (_) {}
-                    // Post w-plane count after viewer finishes parsing (async)
+                    // Post poly stats after viewer finishes parsing (async)
                     setTimeout(() => {
                         try {
                             const pd = viewer.getPolytopeData();
                             if (pd?.wPlanes?.length) {
                                 window.parent.postMessage({ type: 'c4d_wplane_count', count: pd.wPlanes.length }, '*');
+                                window.parent.postMessage({
+                                    type:       'c4d_poly_stats',
+                                    vertCount:  pd.verts?.length  || 0,
+                                    edgeCount:  pd.edges?.length  || 0,
+                                    wPlanes:    pd.wPlanes.length,
+                                }, '*');
                             }
                         } catch (_) {}
                     }, 300);
