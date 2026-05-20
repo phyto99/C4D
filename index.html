@@ -121,12 +121,11 @@
 
         /* ─── GAME OVERLAY ─── */
         #c4d-turn-bar{position:absolute;top:70px;left:0;right:0;height:28px;background:transparent;z-index:150;display:none;align-items:center;justify-content:center;padding:0 16px;gap:8px;font-family:monospace;font-size:12px;pointer-events:none}
-        #game-bar{position:absolute;bottom:0;left:0;right:0;height:6px;background:rgba(0,0,0,0.6);z-index:99;display:none;border-top:1px solid rgba(255,255,255,0.06)}
-        #game-bar.visible{display:block}
-        #bar-map-name{position:absolute;top:104px;left:14px;right:14px;font-size:11px;color:#fff;background:transparent;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;z-index:98;display:none}
+        #game-bar{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.82);z-index:99;display:none;flex-direction:column;border-top:1px solid rgba(255,255,255,0.06);padding:8px 14px;gap:4px}
+        #game-bar.visible{display:flex}
+        #bar-map-name{position:absolute;bottom:76px;left:14px;right:14px;font-size:11px;color:#fff;background:transparent;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;z-index:98;display:none}
         #bar-map-name.visible{display:block}
-        #bar-controls{position:absolute;top:120px;left:14px;right:14px;display:none;flex-direction:column;gap:3px;pointer-events:none;z-index:98;font-family:monospace}
-        #bar-controls.visible{display:flex}
+        #bar-controls{display:flex;flex-direction:column;gap:4px;pointer-events:none;font-family:monospace}
         #active-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;display:inline-block;box-shadow:0 0 6px currentColor;vertical-align:middle;margin-right:5px}
         #active-name{font-size:12px;font-weight:700;color:#fff;vertical-align:middle}
         #bar-status{color:#ccc;font-size:11px;letter-spacing:.02em}
@@ -140,7 +139,7 @@
         .w-dot-dim{background:rgba(255,107,53,.32);cursor:pointer}
         .w-dot-dim:hover{background:rgba(255,107,53,.68);box-shadow:0 0 7px rgba(0,0,0,.7)}
         /* ─── GAME SCORE PANEL ─── */
-        #game-panel{position:absolute;bottom:84px;right:10px;width:230px;background:rgba(0,0,0,0.9);border:1px solid #222;border-radius:8px;z-index:100;display:none;flex-direction:column;overflow:hidden}
+        #game-panel{position:absolute;top:104px;right:10px;width:230px;background:rgba(0,0,0,0.9);border:1px solid #222;border-radius:8px;z-index:100;display:none;flex-direction:column;overflow:hidden}
         #game-panel.visible{display:flex}
         #game-panel-head{padding:6px 10px;background:#18181e;font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.8px;border-bottom:1px solid #222}
         .gteam-row{display:flex;align-items:center;gap:7px;padding:5px 10px;border-bottom:1px solid #1a1a1a;transition:background .15s}
@@ -210,18 +209,17 @@
         <!-- Shape title -->
         <div id="shape-title"></div>
 
-        <!-- Shape name — top overlay, no background -->
+        <!-- Map name — bottom-left, just above game-bar -->
         <div id="bar-map-name"></div>
 
-        <!-- Controls — top overlay, vertical column, below shape name -->
-        <div id="bar-controls">
-            <div><span id="active-dot"></span><span id="active-name"></span></div>
-            <div><span id="bar-status"></span></div>
-            <div><span id="turn-info"></span></div>
+        <!-- Dark bar at bottom: dot/name, status, turn info -->
+        <div id="game-bar">
+            <div id="bar-controls">
+                <div><span id="active-dot"></span><span id="active-name"></span></div>
+                <div><span id="bar-status"></span></div>
+                <div><span id="turn-info"></span></div>
+            </div>
         </div>
-
-        <!-- Thin accent bar at the very bottom -->
-        <div id="game-bar"></div>
 
         <!-- Multiplayer team chips — full-width bar at very bottom -->
         <div id="c4d-turn-bar">
