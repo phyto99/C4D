@@ -2593,7 +2593,20 @@
         const roomId = (lastPart && lastPart !== 'index.html' && /^[a-zA-Z0-9_-]+$/.test(lastPart))
             ? lastPart : null;
 
-        if (!roomId) return; // ← single-player, do nothing
+        if (!roomId) {
+            const spNotice = document.createElement('div');
+            Object.assign(spNotice.style, {
+                position: 'fixed', top: '12px', left: '50%', transform: 'translateX(-50%)',
+                zIndex: '9999', background: 'rgba(255,140,0,0.92)', color: '#000',
+                fontFamily: 'monospace', fontSize: '13px', fontWeight: 'bold',
+                padding: '6px 18px', borderRadius: '5px',
+                border: '2px solid #ff8c00', pointerEvents: 'none',
+                letterSpacing: '.04em', whiteSpace: 'nowrap',
+            });
+            spNotice.textContent = 'NOTICE: singleplayer testing currently';
+            document.body.appendChild(spNotice);
+            return;
+        }
 
         // Student/player view: hide controls that only make sense in singleplayer
         ['settings-btn', 'input-panel', 'stats-panel', 'library-panel'].forEach(id => {
@@ -2626,6 +2639,31 @@
         let myPlayerIndex       = -1;  // join-order index assigned by server
         let myTeamIndex         = -1;  // playerIndex % teamCount, set on game_started
         let currentPolytopePath = null;
+
+        // ── Pre-game team badge ───────────────────────────────────────
+        let teamBadge = null;
+        function showTeamBadge(teamIdx) {
+            if (!teamBadge) {
+                teamBadge = document.createElement('div');
+                Object.assign(teamBadge.style, {
+                    position: 'fixed', bottom: '16px', left: '14px',
+                    zIndex: '9998', fontFamily: 'monospace', fontSize: '12px',
+                    padding: '3px 10px', borderRadius: '20px', pointerEvents: 'none',
+                    border: '1.5px solid', letterSpacing: '.04em', whiteSpace: 'nowrap',
+                    background: 'transparent',
+                });
+                document.body.appendChild(teamBadge);
+            }
+            const t = TEAMS[teamIdx];
+            const css = t?.css || '#aaa';
+            teamBadge.style.color = css;
+            teamBadge.style.borderColor = css;
+            teamBadge.innerHTML = `<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${css};margin-right:5px;vertical-align:middle;"></span>${t?.name || `Team ${teamIdx}`} <span style="color:#fff;font-size:9px;opacity:.7;">(you)</span>`;
+            teamBadge.style.display = 'block';
+        }
+        function hideTeamBadge() {
+            if (teamBadge) teamBadge.style.display = 'none';
+        }
         window._c4dMyTeamIdx = -1; // shared with UI.update() for "waiting" display
 
         function isMyTurn() { return GS && GS.activeTeam === myTeamIndex; }
@@ -2852,12 +2890,27 @@ ${active ? `box-shadow:0 0 10px ${t.css}44;` : ''}transition:all .25s;">
                 lastReceivedConfig = data.config || {};
                 applyConfig(lastReceivedConfig);
                 patchGame();
-                setBanner('● Connected — waiting for start', '#aaa');
+                const tc = lastReceivedConfig.teamCount || 2;
+                const tentativeTeam = myPlayerIndex >= 0 ? myPlayerIndex % tc : -1;
+                if (tentativeTeam >= 0) {
+                    const t = TEAMS[tentativeTeam];
+                    setBanner(`● Waiting for start — team: ${t?.name || tentativeTeam}`, t?.css || '#aaa');
+                    showTeamBadge(tentativeTeam);
+                } else {
+                    setBanner('● Connected — waiting for start', '#aaa');
+                }
             });
 
             room.onMessage('settings_update', data => {
                 applyConfig(data.config || {});
                 if (GS) viewer.syncColors(GS.ownership, TEAMS);
+                // Refresh pre-game badge if still waiting
+                if (!GS && myPlayerIndex >= 0) {
+                    const cfg = data.config || {};
+                    const tc = cfg.teamCount || 2;
+                    const ti = myPlayerIndex % tc;
+                    showTeamBadge(ti);
+                }
             });
 
             room.onMessage('polytope_select', async data => {
@@ -2876,6 +2929,7 @@ ${active ? `box-shadow:0 0 10px ${t.css}44;` : ''}transition:all .25s;">
                     window._c4dMyTeamIdx = myTeamIndex;
                     GS = data.gs;
                     viewer.syncColors(GS.ownership, TEAMS);
+                    hideTeamBadge();
                     Game.startFromGS(data.config);  // sets up click handler + shows game UI
                     updateTurnBar();
                     const myTeam = TEAMS[myTeamIndex];
@@ -2892,6 +2946,7 @@ ${active ? `box-shadow:0 0 10px ${t.css}44;` : ''}transition:all .25s;">
                     window._c4dMyTeamIdx = myTeamIndex;
                     GS = data.gs;
                     viewer.syncColors(GS.ownership, TEAMS);
+                    hideTeamBadge();
                     Game.startFromGS(lastReceivedConfig);
                     const myTeam = TEAMS[myTeamIndex];
                     setBanner(`● ${myTeam?.name || 'Player'} (you)`, myTeam?.css || '#0f0');
