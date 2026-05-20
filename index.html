@@ -119,18 +119,18 @@
         .team-swatch{width:18px;height:18px;border-radius:3px;border:2px solid transparent;cursor:default}
         .team-swatch.active-swatch{border-color:white}
 
-        /* ─── GAME OVERLAY (full-width bar stack at bottom) ─── */
+        /* ─── GAME OVERLAY ─── */
         #c4d-turn-bar{position:absolute;top:70px;left:0;right:0;height:28px;background:transparent;z-index:150;display:none;align-items:center;justify-content:center;padding:0 16px;gap:8px;font-family:monospace;font-size:12px;pointer-events:none}
-        #game-bar{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.85);z-index:99;display:none;flex-direction:column;border-top:1px solid rgba(255,255,255,0.06);font-family:monospace}
-        #game-bar.visible{display:flex}
-        #bar-map-name{position:absolute;bottom:46px;left:0;right:0;padding:2px 14px;font-size:11px;color:#fff;background:transparent;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;z-index:98;display:none}
+        #game-bar{position:absolute;bottom:0;left:0;right:0;height:6px;background:rgba(0,0,0,0.6);z-index:99;display:none;border-top:1px solid rgba(255,255,255,0.06)}
+        #game-bar.visible{display:block}
+        #bar-map-name{position:absolute;top:104px;left:14px;right:14px;font-size:11px;color:#fff;background:transparent;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;z-index:98;display:none}
         #bar-map-name.visible{display:block}
-        #bar-controls{display:flex;align-items:center;height:38px;padding:0 14px;gap:10px}
-        #active-dot{width:11px;height:11px;border-radius:50%;flex-shrink:0;box-shadow:0 0 7px currentColor}
-        #active-name{font-size:12px;font-weight:700;flex-shrink:0}
-        #bar-middle{flex:1;display:flex;align-items:center;justify-content:center}
-        #bar-status{color:#fff;font-size:11px;white-space:nowrap;letter-spacing:.02em}
-        #turn-info{font-size:10px;color:#555;flex-shrink:0;white-space:nowrap}
+        #bar-controls{position:absolute;top:120px;left:14px;right:14px;display:none;flex-direction:column;gap:3px;pointer-events:none;z-index:98;font-family:monospace}
+        #bar-controls.visible{display:flex}
+        #active-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;display:inline-block;box-shadow:0 0 6px currentColor;vertical-align:middle;margin-right:5px}
+        #active-name{font-size:12px;font-weight:700;color:#fff;vertical-align:middle}
+        #bar-status{color:#ccc;font-size:11px;letter-spacing:.02em}
+        #turn-info{font-size:10px;color:#555}
         #w-dot-overlay{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);height:22px}
         .w-dot{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;transform:translate(-50%,-50%);transition:box-shadow .12s,transform .12s,background .12s}
         .w-dot-current{background:#fff;cursor:default;box-shadow:0 0 9px rgba(0,0,0,.8)}
@@ -210,18 +210,18 @@
         <!-- Shape title -->
         <div id="shape-title"></div>
 
-        <!-- Shape name — floats above game bar, no background -->
+        <!-- Shape name — top overlay, no background -->
         <div id="bar-map-name"></div>
 
-        <!-- Game bar — full-width bar at bottom, visible during game -->
-        <div id="game-bar">
-            <div id="bar-controls">
-                <div id="active-dot"></div>
-                <span id="active-name"></span>
-                <div id="bar-middle"><span id="bar-status"></span></div>
-                <span id="turn-info"></span>
-            </div>
+        <!-- Controls — top overlay, vertical column, below shape name -->
+        <div id="bar-controls">
+            <div><span id="active-dot"></span><span id="active-name"></span></div>
+            <div><span id="bar-status"></span></div>
+            <div><span id="turn-info"></span></div>
         </div>
+
+        <!-- Thin accent bar at the very bottom -->
+        <div id="game-bar"></div>
 
         <!-- Multiplayer team chips — full-width bar at very bottom -->
         <div id="c4d-turn-bar">
@@ -2022,6 +2022,7 @@
                 el('game-panel').classList.add('visible');
                 el('game-bar').classList.add('visible');
                 el('bar-map-name').classList.add('visible');
+                el('bar-controls').classList.add('visible');
                 el('settings-overlay').classList.remove('open');
                 el('win-screen').classList.remove('visible');
             }
@@ -2032,6 +2033,7 @@
                 el('game-panel').classList.remove('visible');
                 el('game-bar').classList.remove('visible');
                 el('bar-map-name').classList.remove('visible');
+                el('bar-controls').classList.remove('visible');
                 el('action-panel').classList.remove('visible');
                 el('win-screen').classList.remove('visible');
             }
@@ -2794,6 +2796,18 @@ ${active ? `box-shadow:0 0 10px ${t.css}44;` : ''}transition:all .25s;">
                 if (!isMyTurn() && !viewer.selectedInter) return; // block step-1 dot select
                 if (origClick) origClick.call(this, e);
             };
+
+            // Sync W-slider position to all clients when the active player releases the slider
+            const wSlider = document.getElementById('w-slider');
+            const origSliderUp = wSlider.onmouseup;
+            const origSliderEnd = wSlider.ontouchend;
+            function sendWUpdate() {
+                if (isMyTurn() && colyseusRoom) {
+                    try { colyseusRoom.send('w_update', { w: viewer.w }); } catch (_) {}
+                }
+            }
+            wSlider.onmouseup   = function (e) { if (origSliderUp)  origSliderUp.call(this, e);  sendWUpdate(); };
+            wSlider.ontouchend  = function (e) { if (origSliderEnd) origSliderEnd.call(this, e); sendWUpdate(); };
         }
 
         // ── Connect ───────────────────────────────────────────────────
@@ -2841,6 +2855,29 @@ ${active ? `box-shadow:0 0 10px ${t.css}44;` : ''}transition:all .25s;">
 
             room.onMessage('state_update', data => {
                 if (data.gs) renderRemoteGS(data.gs);
+            });
+
+            room.onMessage('w_update', data => {
+                if (!isMyTurn() && typeof data.w === 'number') {
+                    viewer.w = data.w;
+                    try {
+                        const slider = document.getElementById('w-slider');
+                        const val    = document.getElementById('slider-value');
+                        slider.value = data.w.toFixed(6);
+                        val.textContent = data.w.toFixed(2);
+                        viewer.updatePositions();
+                        viewer.updateSliderMarkers();
+                    } catch (_) {}
+                }
+            });
+
+            room.onMessage('team_update', data => {
+                if (typeof data.teamIndex === 'number') {
+                    myTeamIndex = data.teamIndex;
+                    window._c4dMyTeamIdx = myTeamIndex;
+                    UI.update();
+                    updateTurnBar();
+                }
             });
 
             room.onLeave(() => setBanner('✕ Disconnected', '#f44'));
