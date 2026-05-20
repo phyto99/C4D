@@ -1949,7 +1949,7 @@
                 viewer.syncColors(GS.ownership, TEAMS);
                 UI.update();
                 if(GS.claimsThisTurn >= GS.rules.claimsPerTurn) {
-                    setTimeout(()=>endTurn(), 400);
+                    setTimeout(()=>Game.endTurn(), 400);
                 }
             }
 
@@ -2133,7 +2133,7 @@
                 const atName    = activeTeam.name;
                 if (GS.phase === 'claim') {
                     status.textContent = notMyTurn
-                        ? `Waiting for ${atName} to claim`
+                        ? `${atName}: ${GS.claimsThisTurn} / ${GS.rules.claimsPerTurn} claimed`
                         : `Claim  ${GS.claimsThisTurn} / ${GS.rules.claimsPerTurn}`;
                 } else if (GS.phase === 'choose-w') {
                     status.textContent = notMyTurn
@@ -2666,6 +2666,11 @@
                 viewer.syncColors(GS.ownership, TEAMS);
                 viewer.animateToW(GS.wPlanes[GS.planeIdx]);
                 if (GS.activeTeam !== undefined) viewer.selectionColor = TEAMS[GS.activeTeam]?.color;
+                // Clear any pending selection when it's no longer the local player's turn
+                if (!isMyTurn() && viewer.selectedInter) {
+                    viewer.selectedInter = null;
+                    viewer.updateHighlight();
+                }
             } catch (_) { /* polytope not yet loaded */ }
             if (GS.phase === 'ended')         UI.showWin();
             else if (GS.phase === 'choose-w') UI.showChooseW();
@@ -2765,7 +2770,7 @@ ${active ? `box-shadow:0 0 10px ${t.css}44;` : ''}transition:all .25s;">
                 syncGS();
             };
 
-            // Only active player can click
+            // Only active player can click or hover
             let _gcHandler = null;
             Object.defineProperty(viewer, 'gameClickHandler', {
                 get() { return _gcHandler; },
@@ -2778,6 +2783,22 @@ ${active ? `box-shadow:0 0 10px ${t.css}44;` : ''}transition:all .25s;">
                 },
                 configurable: true,
             });
+
+            // Block hover highlight and W-dot selection when not the active player
+            const canvas = document.getElementById('canvas');
+            const origMousemove = canvas.onmousemove;
+            canvas.onmousemove = function (e) {
+                if (!isMyTurn() && viewer.selectedInter) {
+                    viewer.selectedInter = null;
+                    try { viewer.updateHighlight(); } catch (_) {}
+                }
+                if (origMousemove) origMousemove.call(this, e);
+            };
+            const origClick = canvas.onclick;
+            canvas.onclick = function (e) {
+                if (!isMyTurn() && !viewer.selectedInter) return; // block step-1 dot select
+                if (origClick) origClick.call(this, e);
+            };
         }
 
         // ── Connect ───────────────────────────────────────────────────
