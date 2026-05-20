@@ -120,10 +120,11 @@
         .team-swatch.active-swatch{border-color:white}
 
         /* ─── GAME OVERLAY (full-width bar stack at bottom) ─── */
-        #c4d-turn-bar{position:absolute;bottom:0;left:0;right:0;height:34px;background:rgba(0,0,0,0.88);border-top:1px solid rgba(255,255,255,0.07);z-index:150;display:none;align-items:center;justify-content:center;padding:0 16px;gap:8px;font-family:monospace;font-size:12px;pointer-events:none}
-        #game-bar{position:absolute;bottom:34px;left:0;right:0;background:rgba(0,0,0,0.85);z-index:99;display:none;flex-direction:column;border-top:1px solid rgba(255,255,255,0.06);font-family:monospace}
+        #c4d-turn-bar{position:absolute;top:70px;left:0;right:0;height:28px;background:transparent;z-index:150;display:none;align-items:center;justify-content:center;padding:0 16px;gap:8px;font-family:monospace;font-size:12px;pointer-events:none}
+        #game-bar{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.85);z-index:99;display:none;flex-direction:column;border-top:1px solid rgba(255,255,255,0.06);font-family:monospace}
         #game-bar.visible{display:flex}
-        #bar-map-name{padding:3px 14px;font-size:10px;color:#555;border-bottom:1px solid #1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        #bar-map-name{position:absolute;bottom:46px;left:0;right:0;padding:2px 14px;font-size:11px;color:#fff;background:transparent;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;z-index:98;display:none}
+        #bar-map-name.visible{display:block}
         #bar-controls{display:flex;align-items:center;height:38px;padding:0 14px;gap:10px}
         #active-dot{width:11px;height:11px;border-radius:50%;flex-shrink:0;box-shadow:0 0 7px currentColor}
         #active-name{font-size:12px;font-weight:700;flex-shrink:0}
@@ -211,9 +212,11 @@
         <!-- Shape title -->
         <div id="shape-title"></div>
 
-        <!-- Game bar — full-width stack just above chips bar, visible during game -->
+        <!-- Shape name — floats above game bar, no background -->
+        <div id="bar-map-name"></div>
+
+        <!-- Game bar — full-width bar at bottom, visible during game -->
         <div id="game-bar">
-            <div id="bar-map-name"></div>
             <div id="bar-controls">
                 <div id="active-dot"></div>
                 <span id="active-name"></span>
@@ -2021,6 +2024,7 @@
                 el('input-panel').style.display   = 'none';
                 el('game-panel').classList.add('visible');
                 el('game-bar').classList.add('visible');
+                el('bar-map-name').classList.add('visible');
                 el('settings-overlay').classList.remove('open');
                 el('win-screen').classList.remove('visible');
             }
@@ -2030,6 +2034,7 @@
                 el('input-panel').style.display   = '';
                 el('game-panel').classList.remove('visible');
                 el('game-bar').classList.remove('visible');
+                el('bar-map-name').classList.remove('visible');
                 el('action-panel').classList.remove('visible');
                 el('win-screen').classList.remove('visible');
             }
